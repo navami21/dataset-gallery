@@ -3,13 +3,14 @@ const mongoose = require("mongoose");
 const datasetSchema = new mongoose.Schema({
   title: String,
   description: String,
-  category: String,
-  imageUrl: String, // dataset thumbnail or cover
+  category: { type: mongoose.Schema.Types.ObjectId, ref: "category",required: true  },
+  image: String, // dataset thumbnail or cover
   csvUrl: String,   // uploaded CSV file path or link
   size: String,     // "12KB", "1.3MB" etc.
   columns: [String], // extracted from CSV headers
+  columnCount: Number,
   videos: [String], // optional video links
-  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
   createdAt: { type: Date, default: Date.now }
 });
 

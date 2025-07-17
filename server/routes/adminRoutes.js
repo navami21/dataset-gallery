@@ -36,16 +36,17 @@ router.post("/upload-users",verifyToken,isAdmin, upload.single("file"), async (r
 
       const rawPassword = generateRandomPassword();
       const hashedPassword = await bcrypt.hash(rawPassword, 10);
-
       const newUser = new User({
         name,
         email,
         password: hashedPassword,
-        oneTimePassword: rawPassword,
         role: "user",
       });
+      console.log("Before save - password:", newUser.password);
 
       await newUser.save();
+      console.log("After save - password in DB:", (await User.findOne({ email })).password);
+
       await sendPasswordEmail(email, rawPassword); // utility function to send email
 
       newUsers.push(email);

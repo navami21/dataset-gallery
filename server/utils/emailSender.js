@@ -9,25 +9,29 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendPasswordEmail = async (to, password) => {
-  await transporter.sendMail({
-    from: `"Admin" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: "🎉 Welcome to Dataset Gallery – Your Login Password Inside!",
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2 style="color: #2b6cb0;">Welcome to <span style="color:#1a202c;">Dataset Gallery</span>!</h2>
-        <p>Hi there,</p>
-        <p>We're excited to have you onboard. You’ve been successfully registered to our platform where you can explore, interact with, and learn from alumni datasets related to AI/ML, DSA, and more.</p>
-        <p>Your temporary login password is:</p>
-        <p style="font-size: 18px; font-weight: bold; color: #d53f8c;">${password}</p>
-        <p>Please use this password to log in. We recommend you change it after your first login for better security.</p>
-        <br/>
-        <p>Happy exploring!</p>
-        <p>– Dataset Gallery Team</p>
-      </div>
-    `,
-  });
-};
+    await transporter.sendMail({
+      from: `"ICTAK Admin" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: "Welcome to ICTAK Dataset Gallery!",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9;">
+          <div style="text-align: center;">
+          </div>
+          <h2 style="color: #005fa3;">Welcome to ICTAK Dataset Gallery!</h2>
+          <p>Dear User,</p>
+          <p>You have been successfully added to the ICTAK Dataset Gallery platform.</p>
+          <p>Your temporary login password is:</p>
+          <p style="font-size: 18px; font-weight: bold; background: #eef; padding: 10px; display: inline-block;">${password}</p>
+          <p style="margin-top: 20px;">
+            Use this password to log in and explore alumni projects, datasets, and curated content tailored for you.
+          </p>
+          <br/>
+          <p>Warm regards,<br/>ICTAK  Team</p>
+        </div>
+      `,
+    });
+  };
+  
 
 
 module.exports = { sendPasswordEmail };
