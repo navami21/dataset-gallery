@@ -20,7 +20,8 @@ const categoryRoutes=require('./routes/categoryRoutes');
 app.use('/api/category',categoryRoutes)
 const datasetRoutes=require('./routes/datasetRoutes');
 app.use('/api/datasets',datasetRoutes)
-
+const projectRoutes=require('./routes/projectRoutes');
+app.use('/api/projects',projectRoutes)
 
 
 
