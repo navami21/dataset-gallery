@@ -4,7 +4,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../model/userData");  
 const { verifyToken } = require("../middleware/authMiddleware"); 
-
+const Like= require("../model/likeData");
+const Comment=require("../model/commentData");
 // Admin Registration 
 router.post("/register-admin", async (req, res) => {
   try {
@@ -107,6 +108,51 @@ router.put("/change-password", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Failed to change password", error: err.message });
   }
 });
+router.post("/like/:datasetId", verifyToken, async (req, res) => {
+  const { datasetId } = req.params;
+  const userId = req.user.userId;
 
+  try {
+    // Check if already liked
+    const existing = await Like.findOne({ user: userId, dataset: datasetId });
+    if (existing) return res.status(400).json({ message: "Already liked" });
+
+    const like = new Like({ user: userId, dataset: datasetId });
+    await like.save();
+    res.status(201).json({ message: "Liked" });
+  } catch (err) {
+    res.status(500).json({ message: "Error liking", error: err.message });
+  }
+});
+// Adding comment to a dataset
+router.post("/comment/:datasetId", verifyToken, async (req, res) => {
+  const { datasetId } = req.params;
+  const userId = req.user.userId;
+  const { content } = req.body;
+
+  try {
+    const comment = new Comment({ user: userId, dataset: datasetId, content });
+    await comment.save();
+    res.status(201).json({ message: "Comment added" });
+  } catch (err) {
+    res.status(500).json({ message: "Error commenting", error: err.message });
+  }
+});
+
+router.get("/dataset/:datasetId/stats", verifyToken,async (req, res) => {
+  const { datasetId } = req.params;
+
+  try {
+    const likeCount = await Like.countDocuments({ dataset: datasetId });
+    const commentCount = await Comment.countDocuments({ dataset: datasetId });
+
+    res.status(200).json({
+      likes: likeCount,
+      comments: commentCount,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch stats", error: err.message });
+  }
+});
 
 module.exports = router;

@@ -7,16 +7,16 @@ const User = require("../model/userData");
 const { sendPasswordEmail } = require("../utils/emailSender"); // custom function
 const router = express.Router();
 const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
-const { verify } = require("jsonwebtoken");
-
-
+// const { verify } = require("jsonwebtoken");
+const Like=require("../model/likeData");
+const Comment=require("../model/commentData");
 
 // Configure multer
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 function generateRandomPassword() {
-  return Math.random().toString(36).slice(2, 8); // 6 char alphanumeric
+  return Math.random().toString(36).slice(-6) + Math.random().toString(36).toUpperCase().slice(-2);
 }
 
 // Upload Excel file
@@ -60,4 +60,38 @@ router.post("/upload-users",verifyToken,isAdmin, upload.single("file"), async (r
   }
 });
 
+// Get likes for a dataset (admin only)
+router.get("/like/:datasetId", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const likes = await Like.find({ dataset: req.params.datasetId }).populate("user", "name email");
+    res.json({
+      totalLikes: likes.length,
+      likedBy: likes.map((l) => l.user),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching likes", error: err.message });
+  }
+});
+
+
+
+// Get all comments for a dataset (admin only)
+router.get("/comment/:datasetId", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const comments = await Comment.find({ dataset: req.params.datasetId })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      totalComments: comments.length,
+      comments: comments.map((c) => ({
+        user: c.user,
+        content: c.content,
+        createdAt: c.createdAt,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching comments", error: err.message });
+  }
+});
 module.exports = router;
