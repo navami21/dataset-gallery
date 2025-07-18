@@ -1,4 +1,4 @@
-// routes/adminUpload.js
+// routes/adminUpload
 const express = require("express");
 const multer = require("multer");
 const xlsx = require("xlsx");
