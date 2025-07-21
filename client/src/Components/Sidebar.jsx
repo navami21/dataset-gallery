@@ -10,7 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import LogoImg from "../assets/cropped-LOGO_ICTAK-Small.png";
+// import LogoImg from "../assets/cropped-LOGO_ICTAK-Small.png";
 
 const navItems = [
   { label: "Dashboard", icon: <LayoutDashboard />, to: "/admin/dashboard" },
@@ -32,9 +32,9 @@ const Sidebar = () => {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+        {/* <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
           <img
-            src={LogoImg}
+            src="/assets/LOGO.png"
             alt="Logo"
             className="h-8 w-8 object-contain flex-shrink-0"
           />
@@ -43,7 +43,7 @@ const Sidebar = () => {
               ICTAK Dataset Gallery
             </span>
           )}
-        </div>
+        </div> */}
 
         <button onClick={() => setIsOpen(!isOpen)} className="text-gray-600">
           <Menu />
