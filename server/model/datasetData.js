@@ -4,7 +4,7 @@ const datasetSchema = new mongoose.Schema({
   title: String,
   description: String,
   category: { type: mongoose.Schema.Types.ObjectId, ref: "category",required: true  },
-  image: String, // dataset thumbnail or cover
+  imageUrl: String, // dataset thumbnail or cover
   csvUrl: String,   // uploaded CSV file path or link
   size: String,     // "12KB", "1.3MB" etc.
   columns: [String], // extracted from CSV headers
