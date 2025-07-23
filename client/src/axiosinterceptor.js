@@ -1,19 +1,17 @@
 import axios from "axios";
 const axiosInstance=axios.create({
-    baseURL:'http://localhost:3000'
+    baseURL:'http://localhost:3000/api'
 })
 
 axiosInstance.interceptors.request.use(function (config) {
-    const accessToken=localStorage.getItem('logintoken')
-    if(accessToken){
-        if(config){
-            config.headers.token=accessToken;
-        }
+    const accessToken = localStorage.getItem('logintoken');
+    if (accessToken && config) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   }, function (error) {
-    // Do something with request error
     return Promise.reject(error);
   });
+  
 
   export default axiosInstance

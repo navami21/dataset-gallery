@@ -4,12 +4,16 @@ const datasetSchema = new mongoose.Schema({
   title: String,
   description: String,
   category: { type: mongoose.Schema.Types.ObjectId, ref: "category",required: true  },
-  image: String, // dataset thumbnail or cover
-  csvUrl: String,   // uploaded CSV file path or link
-  size: String,     // "12KB", "1.3MB" etc.
-  columns: [String], // extracted from CSV headers
+  imageUrl: String,
+  csvUrl: String, 
+  fileType: {
+    type: String,
+    default: "csv", 
+  },  
+  size: String,    
+  columns: [String], 
   columnCount: Number,
-  videos: [String], // optional video links
+  videos: [String],
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
   createdAt: { type: Date, default: Date.now }
 });
