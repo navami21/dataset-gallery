@@ -67,7 +67,9 @@ router.post(
         imageUrl: image ? `/uploads/images/${image.filename}` : "",
         csvUrl: csv ? `/uploads/csvs/${csv.filename}` : "",
         size: csv ? (csv.size / 1024).toFixed(2) + " KB" : "",
+        fileType: csv ? path.extname(csv.originalname).slice(1).toUpperCase() : "", 
       });
+      console.log("CSV URL saved:", `/uploads/csvs/${csv.filename}`);
 
       await newDataset.save();
       res.status(201).json({ message: "Dataset added", dataset: newDataset });
@@ -101,7 +103,10 @@ router.get("/:id",verifyToken, async (req, res) => {
 // Get Datasets by Category
 router.get("/category/:categoryId", verifyToken,async (req, res) => {
   try {
+    console.log("Looking for category with ID:", req.params.id);
+
     const datasets = await Dataset.find({ category: req.params.categoryId });
+
     res.json(datasets);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -112,7 +117,7 @@ router.get("/category/:categoryId", verifyToken,async (req, res) => {
 
 //Update Dataset
 router.put(
-  "/edit/:id",isAdmin,verifyToken,
+  "/edit/:id",verifyToken,isAdmin,
   upload.fields([
     { name: "image", maxCount: 1 },
     { name: "csv", maxCount: 1 },
@@ -142,7 +147,7 @@ router.put(
   }
 );
 //Delete Dataset
-router.delete("/:id",isAdmin,verifyToken, async (req, res) => {
+router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
     try {
       await Dataset.findByIdAndDelete(req.params.id);
       res.json({ message: "Dataset deleted" });

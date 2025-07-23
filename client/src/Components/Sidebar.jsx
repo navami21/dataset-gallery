@@ -58,7 +58,7 @@ const Sidebar = () => {
               to={item.to}
               className="flex items-center space-x-4 px-4 py-3 hover:bg-blue-100 text-gray-700 transition"
             >
-              <span className="text-black-700 semi-bold">{item.icon}</span>
+              <span className="text-black-700">{item.icon}</span>
               {isOpen && <span className="text-sm font-bold">{item.label}</span>}
             </Link>
 

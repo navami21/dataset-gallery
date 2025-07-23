@@ -58,6 +58,25 @@ router.delete("/delete/:id", verifyToken, isAdmin, async (req, res) => {
       res.status(500).json({ message: "Delete failed", error: err.message });
     }
   });
-  
-  
+
+router.get("/category-count", verifyToken, isAdmin, async (req, res) => {
+  console.log("GET /category-count route hit"); 
+  try {
+    const count = await Category.countDocuments();
+    
+    res.json({ count });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching category count" });
+  }
+});
+router.get("/:id", async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: "Category not found" });
+    res.json(category);
+  } catch (err) {
+    console.error("Fetch category error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = router;

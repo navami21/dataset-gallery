@@ -60,6 +60,20 @@ router.post("/upload-users",verifyToken,isAdmin, upload.single("file"), async (r
     res.status(500).json({ message: "Error uploading users", error: err.message });
   }
 });
+router.get("/recent-users", async (req, res) => {
+  try {
+    const users = await User.find({ role: "user" }) // exclude admins
+      .sort({ createdAt: -1 })                     // most recent first
+      .limit(10)                                   // limit to recent 10 users
+      .select("name email isOnline lastActive");   // select only required fields
+
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+module.exports = router;
 
 // Get likes for a dataset (admin only)
 router.get("/like/:datasetId", verifyToken, isAdmin, async (req, res) => {

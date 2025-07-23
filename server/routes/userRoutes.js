@@ -6,6 +6,7 @@ const User = require("../model/userData");
 const { verifyToken } = require("../middleware/authMiddleware"); 
 const Like= require("../model/likeData");
 const Comment=require("../model/commentData");
+
 // Admin Registration 
 router.post("/register-admin", async (req, res) => {
   try {
