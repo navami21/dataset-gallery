@@ -15,6 +15,7 @@ import DatasetView from "./Components/DatasetView";
 import CategoryDatasets from "./pages/CategoryDatasets";
 import DatasetForm from "./pages/DatasetForm";
 import Contact from "./pages/Contact";
+import About from "./Components/About";
 import AlumniProjects from "./Components/AlumniProject";
 // import EngagementStats from "./Components/EngagementStats";
 import EngagementPage from "./pages/EngagementPage";
@@ -27,7 +28,7 @@ const App = () => {
       <Route path="/" element={<Main child={<Home />} />} />
       <Route path="/login" element={<Main child={<Login />} />} />
       <Route path="/contact" element={<Main child={<Contact />}/>} />
-
+      <Route path="/about" element={<Main child={<About />}/>} />
       {/* Protected Routes */}
       <Route element={<PrivateRoute  allowedRoles={['admin']}/>}>
         {/* Admin layout with sidebar and outlet */}
@@ -41,24 +42,31 @@ const App = () => {
           <Route path="/admin/datasets/add" element={<DatasetForm />} />
           <Route path="/admin/datasets/edit/:datasetId" element={<DatasetForm />} />
           <Route path="datasets/:id" element={<DatasetDetails />} />
-          <Route path="*" element={<div>404 Not Found</div>} /> 
+
+
+
+
+<Route path="*" element={<div>404 Not Found</div>} /> 
           <Route path="projects" element={<AlumniProjects />} />
           <Route path="projects/:id" element={<AlumniProjects/>}/>
           <Route path="projects/dataset/:id" element={<Main child={<ProjectByDataset />} />} />
           <Route path="/admin/engagement/:type/:id" element={<EngagementPage />} />
 
 
-
-
-
           
-
+         </Route>
+       
         </Route>
+
         {/* Other user routes */}
+       <Route element={<PrivateRoute  allowedRoles={["user"]}/>}>
         <Route path="/userdashboard" element={<Main child={<UserDashboard />} />} />
         <Route path="/viewdsa" element={<Main child={<ViewDSA />} />} />
         <Route path="/datasetdetails" element={<Main child={<DatasetDetails />} />} />
+        
+     
       </Route>
+      
     </Routes>
   );
 };

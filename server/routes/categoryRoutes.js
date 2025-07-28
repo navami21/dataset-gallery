@@ -23,7 +23,7 @@ router.post("/add", verifyToken, isAdmin, async (req, res) => {
 });
 
 // View All Categories
-router.get("/all", async (req, res) => {
+router.get("/all",verifyToken, async (req, res) => {
   try {
     const categories = await Category.find().sort({ createdAt: -1 });
     res.status(200).json(categories);
