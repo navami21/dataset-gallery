@@ -11,6 +11,7 @@ const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 const Like=require("../model/likeData");
 const Comment=require("../model/commentData");
 const ActivityLog = require("../model/activitylogData");
+const mongoose = require("mongoose"); 
 
 // Configure multer
 const storage = multer.memoryStorage();
@@ -73,25 +74,38 @@ router.get("/recent-users", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-module.exports = router;
 
-// Get likes for a dataset (admin only)
+
+
 router.get("/like/:datasetId", verifyToken, isAdmin, async (req, res) => {
   try {
-    const likes = await Like.find({ dataset: req.params.datasetId }).populate("user", "name email");
+    const datasetId = new mongoose.Types.ObjectId(req.params.datasetId);
+    const likes = await Like.find({ dataset: datasetId }).populate("user", "name email");
     res.json({
       totalLikes: likes.length,
-      likedBy: likes.map((l) => l.user),
+      likedBy: likes.map((l) => ({
+        user: l.user,
+        createdAt: l.createdAt,
+      })),
     });
+    
   } catch (err) {
     res.status(500).json({ message: "Error fetching likes", error: err.message });
   }
 });
 
-// Get all comments for a dataset (admin only)
+
 router.get("/comment/:datasetId", verifyToken, isAdmin, async (req, res) => {
+  console.log("Querying for dataset ObjectId:", req.params.datasetId);
+
   try {
-    const comments = await Comment.find({ dataset: req.params.datasetId })
+    if (!mongoose.Types.ObjectId.isValid(req.params.datasetId)) {
+      return res.status(400).json({ message: "Invalid dataset ID" });
+    }
+
+    const datasetId = new mongoose.Types.ObjectId(req.params.datasetId);
+    
+    const comments = await Comment.find({ dataset: datasetId })
       .populate("user", "name email")
       .sort({ createdAt: -1 });
 
@@ -99,12 +113,33 @@ router.get("/comment/:datasetId", verifyToken, isAdmin, async (req, res) => {
       totalComments: comments.length,
       comments: comments.map((c) => ({
         user: c.user,
-        content: c.content,
+        comment: c.comment, // 🔧 corrected
         createdAt: c.createdAt,
       })),
     });
   } catch (err) {
+    console.error("Error in /comment/:datasetId:", err);
     res.status(500).json({ message: "Error fetching comments", error: err.message });
+  }
+});
+
+
+
+
+
+router.get("/project/:projectId/stats", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const likeCount = await Like.countDocuments({ project: projectId });
+    const commentCount = await Comment.countDocuments({ project: projectId });
+
+    res.status(200).json({
+      likes: likeCount,
+      comments: commentCount,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch project stats", error: err.message });
   }
 });
 
@@ -166,6 +201,40 @@ router.get("/admin/user-activity/:userId", verifyToken, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Error fetching user activity", error: err.message });
+  }
+});
+
+//all stats overview
+router.get("/admin/stats", verifyToken, async (req, res) => {
+  try {
+    const datasetLikes = await Like.aggregate([
+      { $match: { dataset: { $ne: null } } },
+      { $group: { _id: "$dataset", count: { $sum: 1 } } }
+    ]);
+
+    const projectLikes = await Like.aggregate([
+      { $match: { project: { $ne: null } } },
+      { $group: { _id: "$project", count: { $sum: 1 } } }
+    ]);
+
+    const datasetComments = await Comment.aggregate([
+      { $match: { dataset: { $ne: null } } },
+      { $group: { _id: "$dataset", count: { $sum: 1 } } }
+    ]);
+
+    const projectComments = await Comment.aggregate([
+      { $match: { project: { $ne: null } } },
+      { $group: { _id: "$project", count: { $sum: 1 } } }
+    ]);
+
+    res.status(200).json({
+      datasetLikes,
+      projectLikes,
+      datasetComments,
+      projectComments,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch all stats", error: err.message });
   }
 });
 

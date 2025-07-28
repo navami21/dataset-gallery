@@ -80,7 +80,33 @@ router.get("/", verifyToken, async (req, res) => {
       res.status(500).json({ message: "Failed to fetch projects", error: err.message });
     }
   });
-  
+  router.get("/dataset/:datasetId", verifyToken, async (req, res) => {
+  try {
+    const datasetId = req.params.datasetId;
+
+    const projects = await AlumniProject.find({ dataset: datasetId })
+      .populate({
+        path: "dataset",
+        populate: { path: "category", select: "name" },
+        select: "title category"
+      });
+
+    const result = projects.map(project => {
+      const { addedBy, ...rest } = project.toObject();
+      return {
+        ...rest,
+        dataset: {
+          title: project.dataset?.title || "Untitled Dataset",
+          category: project.dataset?.category?.name || "Uncategorized"
+        }
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch projects", error: err.message });
+  }
+});
 
 // UPDATE - Admin can update a project (with optional image change)
 router.put("/:id", verifyToken, isAdmin, upload.single("image"), async (req, res) => {

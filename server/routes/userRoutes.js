@@ -109,6 +109,7 @@ router.put("/change-password", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Failed to change password", error: err.message });
   }
 });
+//like a dataset
 router.post("/like/:datasetId", verifyToken, async (req, res) => {
   const { datasetId } = req.params;
   const userId = req.user.userId;
@@ -129,12 +130,14 @@ router.post("/like/:datasetId", verifyToken, async (req, res) => {
 router.post("/comment/:datasetId", verifyToken, async (req, res) => {
   const { datasetId } = req.params;
   const userId = req.user.userId;
-  const { content } = req.body;
+  const { comment } = req.body;
 
   try {
-    const comment = new Comment({ user: userId, dataset: datasetId, content });
-    await comment.save();
-    res.status(201).json({ message: "Comment added" });
+   // Fix: rename local variable
+const newComment = new Comment({ user: userId, dataset: datasetId, comment });
+await newComment.save();
+res.status(201).json({ message: "Comment added" });
+
   } catch (err) {
     res.status(500).json({ message: "Error commenting", error: err.message });
   }
@@ -153,6 +156,37 @@ router.get("/dataset/:datasetId/stats", verifyToken,async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch stats", error: err.message });
+  }
+});
+
+//post like for project
+router.post("/like/project/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    const existing = await Like.findOne({ user: userId, project: projectId });
+    if (existing) return res.status(400).json({ message: "Already liked" });
+
+    const like = new Like({ user: userId, project: projectId });
+    await like.save();
+    res.status(201).json({ message: "Project liked" });
+  } catch (err) {
+    res.status(500).json({ message: "Error liking project", error: err.message });
+  }
+});
+//comment on project
+router.post("/comment/project/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.user.userId;
+  const { comment } = req.body;
+
+  try {
+    const newComment = new Comment({ user: userId, project: projectId, comment });
+    await comment.save();
+    res.status(201).json({ message: "Comment added to project" });
+  } catch (err) {
+    res.status(500).json({ message: "Error commenting on project", error: err.message });
   }
 });
 
