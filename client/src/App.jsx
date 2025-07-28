@@ -5,7 +5,6 @@ import AdminDashboard from "./Components/Admindashboard";
 import AdminLayout from "./Components/AdminLayout";
 import UserDashboard from "./Components/Userdashboard";
 import ViewDSA from "./pages/Viewdsa";
-import Projects from "./pages/Projects";
 import DatasetDetails from "./pages/DatasetDetails";
 import PrivateRoute from "./Components/PrivateRoute";
 import Main from "./Components/Main";
@@ -16,6 +15,10 @@ import DatasetView from "./Components/DatasetView";
 import CategoryDatasets from "./pages/CategoryDatasets";
 import DatasetForm from "./pages/DatasetForm";
 import Contact from "./pages/Contact";
+import AlumniProjects from "./Components/AlumniProject";
+// import EngagementStats from "./Components/EngagementStats";
+import EngagementPage from "./pages/EngagementPage";
+import ProjectByDataset from "./Components/ProjectByDataset";
 
 const App = () => {
   return (
@@ -38,8 +41,12 @@ const App = () => {
           <Route path="/admin/datasets/add" element={<DatasetForm />} />
           <Route path="/admin/datasets/edit/:datasetId" element={<DatasetForm />} />
           <Route path="datasets/:id" element={<DatasetDetails />} />
+          <Route path="*" element={<div>404 Not Found</div>} /> 
+          <Route path="projects" element={<AlumniProjects />} />
+          <Route path="projects/:id" element={<AlumniProjects/>}/>
+          <Route path="projects/dataset/:id" element={<Main child={<ProjectByDataset />} />} />
+          <Route path="/admin/engagement/:type/:id" element={<EngagementPage />} />
 
-<Route path="*" element={<div>404 Not Found</div>} />
 
 
 
@@ -47,11 +54,9 @@ const App = () => {
           
 
         </Route>
-
         {/* Other user routes */}
         <Route path="/userdashboard" element={<Main child={<UserDashboard />} />} />
         <Route path="/viewdsa" element={<Main child={<ViewDSA />} />} />
-        <Route path="/projects" element={<Main child={<Projects />} />} />
         <Route path="/datasetdetails" element={<Main child={<DatasetDetails />} />} />
       </Route>
     </Routes>
