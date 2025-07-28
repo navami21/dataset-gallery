@@ -1,5 +1,5 @@
 // src/pages/ProjectByDataset.jsx
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 
@@ -10,9 +10,11 @@ const ProjectByDataset = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await axiosInstance.get(`/projects/dataset/${id}`, {
-          headers: { token: localStorage.getItem("logintoken") },
-        });
+            const res = await axiosInstance.get(`/projects/dataset/${id}`, {
+        headers: {
+          token: localStorage.getItem("logintoken"),
+        },
+      });
         setProjects(res.data);
       } catch (err) {
         console.error("Error fetching projects:", err);
