@@ -39,7 +39,7 @@ const Navbar = () => {
       case "admin":
         return <Link to="/admin/datasets/add">Add Datasets</Link>;
       case "user":
-        return <Link to="/user/dashboard">Dashboard</Link>;
+        return <Link to="/userdashboard">Dashboard</Link>;
       default:
         return null;
     }
