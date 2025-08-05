@@ -93,93 +93,45 @@ router.get("/recent-users", async (req, res) => {
   }
 });
 
+
+
 // router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
 //   try {
 //     const logs = await ActivityLog.find()
 //       .populate({
 //         path: "user",
-//         match: { role: "user" }, // Exclude admin logs
-//         select: "name email role",
+//         match: { role: { $ne: "admin" } }, // exclude admin activity
+//         select: "name email role"
 //       })
-//       .populate({
-//         path: "dataset",
-//         select: "title",
-//       })
-//       .sort({ timestamp: 1 });
+//       .populate("dataset", "title")
+//       .sort({ timestamp: -1 });
 
-//     const userLogsMap = {};
+//     // remove logs where user is null (because they were admins filtered out above)
+//     const filteredLogs = logs.filter(log => log.user);
 
-//     logs.forEach(log => {
-//       // 🔒 Skip logs with null user (admins)
-//       if (!log.user) return;
-
-//       const userId = log.user._id.toString();
-
-//       if (!userLogsMap[userId]) {
-//         userLogsMap[userId] = {
-//           user: {
-//             name: log.user.name,
-//             email: log.user.email,
-//           },
-//           sessions: [],
-//         };
-//       }
-
-//       const userSessions = userLogsMap[userId].sessions;
-
-//       if (log.action === "login") {
-//         userSessions.push({
-//           loginTime: log.timestamp,
-//           logoutTime: null,
-//           accessedContent: [],
-//           duration: null,
-//         });
-//       } else if (log.action === "logout") {
-//         const currentSession = userSessions[userSessions.length - 1];
-//         if (currentSession && !currentSession.logoutTime) {
-//           currentSession.logoutTime = log.timestamp;
-//           currentSession.duration = Math.round(
-//             (log.timestamp - currentSession.loginTime) / 60000
-//           ); // in minutes
-//         }
-//       } else {
-//         const currentSession = userSessions[userSessions.length - 1];
-//         if (currentSession) {
-//           const title = log.dataset?.title || "Unknown Dataset";
-//           if (!currentSession.accessedContent.includes(title)) {
-//             currentSession.accessedContent.push(title);
-//           }
-//         }
-//       }
-//     });
-
-//     const result = Object.values(userLogsMap)
-//       .flatMap(userEntry =>
-//         userEntry.sessions.map(session => ({
-//           user: userEntry.user,
-//           loginTime: session.loginTime,
-//           logoutTime: session.logoutTime,
-//           accessedContent: session.accessedContent,
-//           duration: session.duration,
-//         }))
-//       )
-//       .sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime));
-
-//     res.status(200).json(result);
-//   } catch (error) {
-//     console.error("Error in /admin/all-user-activity:", error);
-//     res.status(500).json({ error: "Server error" });
+//     res.json(filteredLogs);
+//   } catch (err) {
+//     console.error("Error fetching activity logs:", err);
+//     res.status(500).json({ message: "Internal server error" });
 //   }
 // });
+
 
 // router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
 //   try {
 //     const logs = await ActivityLog.find()
-//       .populate("user", "name email")
+//       .populate({
+//         path: "user",
+//         match: { role: { $ne: "admin" } }, // exclude admin activity
+//         select: "name email role"
+//       })
 //       .populate("dataset", "title")
 //       .sort({ timestamp: -1 });
 
-//     res.json(logs);
+//     // remove logs with null user (admins filtered out)
+//     const filteredLogs = logs.filter(log => log.user);
+
+//     res.json(filteredLogs);
 //   } catch (err) {
 //     console.error("Error fetching activity logs:", err);
 //     res.status(500).json({ message: "Internal server error" });
@@ -188,22 +140,111 @@ router.get("/recent-users", async (req, res) => {
 
 router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
   try {
-    const logs = await ActivityLog.find()
+    const logs = await ActivityLog.find({
+      action: { $in: ["login", "logout"] }
+    })
       .populate({
         path: "user",
-        match: { role: { $ne: "admin" } }, // exclude admin activity
+        match: { role: { $ne: "admin" } },
         select: "name email role"
       })
-      .populate("dataset", "title")
       .sort({ timestamp: -1 });
 
-    // remove logs where user is null (because they were admins filtered out above)
-    const filteredLogs = logs.filter(log => log.user);
+    const userMap = {};
 
-    res.json(filteredLogs);
+    logs.forEach(log => {
+      if (!log.user) return;
+      const uid = log.user._id.toString();
+
+      if (!userMap[uid]) {
+        userMap[uid] = {
+          user: log.user,
+          lastLogin: null,
+          lastLogout: null
+        };
+      }
+
+      if (log.action === "login" && !userMap[uid].lastLogin) {
+        userMap[uid].lastLogin = log.timestamp;
+      }
+
+      if (log.action === "logout" && !userMap[uid].lastLogout) {
+        userMap[uid].lastLogout = log.timestamp;
+      }
+    });
+
+    res.json(Object.values(userMap));
   } catch (err) {
     console.error("Error fetching activity logs:", err);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/user-activity/:userId", verifyToken, isAdmin, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const logs = await ActivityLog.find({ user: req.params.userId })
+      .populate("dataset", "title category")
+      .sort({ timestamp: 1 });
+
+    const sessions = [];
+    let currentSession = null;
+
+    logs.forEach(log => {
+      const { action, dataset, timestamp } = log;
+
+      if (action === "login") {
+        currentSession = {
+          loginTime: timestamp,
+          logoutTime: null,
+          durationMinutes: null,
+          interactions: []
+        };
+      } 
+      else if (action === "logout" && currentSession) {
+        currentSession.logoutTime = timestamp;
+        currentSession.durationMinutes = Math.round(
+          (timestamp - currentSession.loginTime) / 60000
+        );
+        sessions.push(currentSession);
+        currentSession = null;
+      } 
+      else if (currentSession) {
+        currentSession.interactions.push({
+          action,
+          dataset: dataset ? dataset.title : null,
+          timestamp
+        });
+      }
+    });
+
+    // ✅ Push active session without logout
+    if (currentSession) {
+      currentSession.logoutTime = null; // still active
+      currentSession.durationMinutes = Math.round(
+        (Date.now() - currentSession.loginTime) / 60000
+      );
+      sessions.push(currentSession);
+    }
+
+    // ✅ Also return all raw actions for quick view
+    const allActions = logs.map(l => ({
+      action: l.action,
+      dataset: l.dataset ? l.dataset.title : null,
+      timestamp: l.timestamp
+    }));
+
+    res.json({
+      user: req.params.userId,
+      totalSessions: sessions.length,
+      sessions,
+      allActions
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user activity", error: err.message });
   }
 });
 
