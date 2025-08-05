@@ -79,6 +79,16 @@ router.post(
     }
   }
 );
+// Get Dataset Count
+router.get("/count", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const count = await Dataset.countDocuments();
+    res.json({ count });
+  } catch (error) {
+    console.error("Failed to get dataset count:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Get All Datasets
 router.get("/", verifyToken,async (req, res) => {

@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
@@ -18,9 +19,15 @@ const Home = () => {
             gain real insights, and build your future.
           </p>
           <div className="flex justify-center md:justify-start">
-            <button className="bg-[#0099CC] hover:bg-blue-600 text-white px-6 py-2 rounded-md shadow-md transition duration-300">
+            {/* <button className="bg-[#0099CC] hover:bg-blue-600 text-white px-6 py-2 rounded-md shadow-md transition duration-300">
               Get started
-            </button>
+            </button> */}
+            <Link
+            to="/login"
+            className="text-white font-bold bg-[#0099cc] hover:bg-[#5EABD6] p-5 hover:text-black px-3 py-1 rounded-md "
+          >
+           Get started
+        </Link>
           </div>
         </div>
 

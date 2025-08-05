@@ -16,46 +16,70 @@ import CategoryDatasets from "./pages/CategoryDatasets";
 import DatasetForm from "./pages/DatasetForm";
 import Contact from "./pages/Contact";
 import About from "./Components/About";
-import AlumniProjects from "./Components/AlumniProject";
 // import EngagementStats from "./Components/EngagementStats";
 import EngagementPage from "./pages/EngagementPage";
-import ProjectByDataset from "./Components/ProjectByDataset";
+import AddProjectForm from "./pages/AddProjectForm";
+import ProjectDetails from "./Components/ProjectDetails";
+import ProjectsByDataset from "./Components/ProjectByDataset";
+import AlumniProjectsList from "./Components/AlumniProjectList";
+import UserUploadPreview from "./Components/UserUploadPreview";
+import ChangePassword from "./Components/ChangePassword";
+import ForgotPassword from "./Components/ForgotPassword";
+import ResetPassword from "./Components/ResetPassword";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import AdminUserActivity from "./Components/AdminUserActivity";
 
 const App = () => {
   return (
+    <>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Main child={<Home />} />} />
       <Route path="/login" element={<Main child={<Login />} />} />
       <Route path="/contact" element={<Main child={<Contact />}/>} />
       <Route path="/about" element={<Main child={<About />}/>} />
+      <Route path="/forgot-password" element={<Main child={<ForgotPassword />} />} />
+            <Route path="/reset-password/:token" element={<Main child={<ResetPassword />} />} />
+
+
+
       {/* Protected Routes */}
+      
+
+
       <Route element={<PrivateRoute  allowedRoles={['admin']}/>}>
-        {/* Admin layout with sidebar and outlet */}
         <Route path="/admin" element={<Main child={<AdminLayout />} />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="category" element={<ViewCategories />} />
-          <Route path="/admin/category/add" element={<AddEditCategory />} />
-          <Route path="/admin/category/edit/:id" element={<AddEditCategory />} />
-          <Route path="category/:categoryId/datasets" element={<CategoryDatasets />} />
-          <Route path="/admin/datasets" element={<DatasetView />} />
-          <Route path="/admin/datasets/add" element={<DatasetForm />} />
-          <Route path="/admin/datasets/edit/:datasetId" element={<DatasetForm />} />
+          <Route path="category/add" element={<AddEditCategory />} />
+          <Route path="category/edit/:id" element={<AddEditCategory />} />
+          {/* <Route path="category/:categoryId/datasets" element={<CategoryDatasets />} /> */}
+          <Route path="datasets" element={<DatasetView />} />
+          <Route path="datasets/add" element={<DatasetForm />} />
+          <Route path="datasets/edit/:datasetId" element={<DatasetForm />} />
           <Route path="datasets/:id" element={<DatasetDetails />} />
+          <Route path="projects" element={<AlumniProjectsList />} />
+          <Route path="projects/add" element={<AddProjectForm />} />
+          <Route path="datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
+          <Route path="edit-project/:id" element={<AddProjectForm />} />
+          <Route path="users/add" element={<UserUploadPreview/>} />
+          <Route path="/admin/user-activity" element={<AdminUserActivity />} />
 
 
 
-
-<Route path="*" element={<div>404 Not Found</div>} /> 
-          <Route path="projects" element={<AlumniProjects />} />
-          <Route path="projects/:id" element={<AlumniProjects/>}/>
-          <Route path="projects/dataset/:id" element={<Main child={<ProjectByDataset />} />} />
-          <Route path="/admin/engagement/:type/:id" element={<EngagementPage />} />
-
-
-          
+          <Route path="*" element={<div>404 Not Found</div>} /> 
+          <Route path="/admin/engagement/:type/:id" element={<EngagementPage />} />          
          </Route>
-       
+        </Route>
+
+        <Route element={<PrivateRoute allowedRoles={['user', 'admin']} />}>
+        <Route path="/projects/:id" element={<Main child={<ProjectDetails />} />} />
+        <Route path="/projects/datasets/:id" element={<Main child={<ProjectDetails />} />} />
+       <Route path="/datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
+       <Route path="/change-password" element={<Main child={<ChangePassword />} />} />
+        <Route path="/category/:categoryId/datasets" element={<Main child={<CategoryDatasets />} />} />
+        <Route path="/dataset/details/:id" element={<Main child={<DatasetDetails />} />}/>
         </Route>
 
         {/* Other user routes */}
@@ -63,11 +87,18 @@ const App = () => {
         <Route path="/userdashboard" element={<Main child={<UserDashboard />} />} />
         <Route path="/viewdsa" element={<Main child={<ViewDSA />} />} />
         <Route path="/datasetdetails" element={<Main child={<DatasetDetails />} />} />
-        
+        {/* <Route path="/category/:id" element={<Main child={<DatasetView />} />} /> */}
+        {/* <Route path="/category/:categoryId/datasets" element={<CategoryDatasets />} /> */}
+
+        {/* <Route path="/category/:id" element={<DatasetView />} /> */}
      
       </Route>
       
     </Routes>
+      <ToastContainer position="top-center" autoClose={3000} />
+
+    </>
+    
   );
 };
 

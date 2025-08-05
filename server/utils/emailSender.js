@@ -31,7 +31,26 @@ const sendPasswordEmail = async (to, password) => {
       `,
     });
   };
-  
+  const sendResetLinkEmail = async (to, name, resetLink) => {
+  await transporter.sendMail({
+    from: `"ICTAK Admin" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Reset Your ICTAK Dataset Gallery Password",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9;">
+        <h2 style="color: #d9534f;">Reset Your Password</h2>
+        <p>Dear ${name || "User"},</p>
+        <p>We received a request to reset your password. Click the link below to set a new password:</p>
+        <p>
+          <a href="${resetLink}" style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+        </p>
+        <p>If you didn't request this, please ignore this email. This link will expire in 1 hour.</p>
+        <br/>
+        <p>Regards,<br/>ICTAK Team</p>
+      </div>
+    `,
+  });
+};
 
 
-module.exports = { sendPasswordEmail };
+module.exports = { sendPasswordEmail, sendResetLinkEmail };

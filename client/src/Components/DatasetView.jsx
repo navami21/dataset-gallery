@@ -1,12 +1,18 @@
-// import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+
+import { useEffect } from "react";
+import { useState } from "react";
 import axiosInstance from "../axiosinterceptor";
-import { FaTrash,  FaEdit } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { FaEdit, FaTrash } from "react-icons/fa";
+
+
 
 const DatasetView = () => {
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Retrieve role from localStorage (adjust key as needed)
+  const userRole = localStorage.getItem("role"); 
 
   const fetchDatasets = async () => {
     try {
@@ -14,7 +20,6 @@ const DatasetView = () => {
       const response = await axiosInstance.get("/datasets", {
         headers: { token },
       });
-
       setDatasets(response.data);
     } catch (error) {
       console.error("Error fetching datasets:", error);
@@ -65,32 +70,38 @@ const DatasetView = () => {
               </h3>
 
               <div className="text-sm text-center text-gray-600">
-              <span className="font-bold text-[#0099cc]">{dataset.fileType}</span> | &nbsp;
+                <span className="font-bold text-[#0099cc]">{dataset.fileType}</span> | &nbsp;
                 {dataset.size || "N/A"} &nbsp; | &nbsp;
                 {dataset.columnCount || 0} Columns
               </div>
 
               <div className="mt-4 flex justify-center gap-3">
                 <Link
-                  to={ `/admin/datasets/${dataset._id}`}
-                  className="px-4 py-1.5 rounded-lg bg-[#0099cc] text-white text-sm font-medium shadow hover:bg-gray-200 hover:text-[#0F828C] transition"
+                  to={`/admin/datasets/${dataset._id}`}
+                  className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition"
                 >
                   View
                 </Link>
-                                <Link
-                  to={`/admin/datasets/edit/${dataset._id}`}
-                  className="text-green-700 hover:green-blue-900 py-2 transition text-xl"
-                  title="Edit"
-                >
-                  <FaEdit />
-                </Link>
-                <button
-                  onClick={() => handleDelete(dataset._id)}
-                  className="text-red-500 hover:text-red-700 transition"
-                  title="Delete"
-                >
-                  <FaTrash />
-                </button>
+
+                {/* Show edit and delete only for admin */}
+                {userRole === "admin" && (
+                  <>
+                    <Link
+                      to={`/admin/datasets/edit/${dataset._id}`}
+                      className="text-green-700 hover:green-blue-900 py-2 transition text-xl"
+                      title="Edit"
+                    >
+                      <FaEdit />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(dataset._id)}
+                      className="text-red-500 hover:text-red-700 transition"
+                      title="Delete"
+                    >
+                      <FaTrash />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -99,5 +110,4 @@ const DatasetView = () => {
     </div>
   );
 };
-
 export default DatasetView;

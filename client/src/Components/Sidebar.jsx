@@ -8,17 +8,28 @@ import {
   Menu,
   Sheet,
   ShieldCheck,
+  FilePlus,
+  Library,
+  Upload,
+  FileUp,
+  PackagePlus,
+
 } from "lucide-react";
 import { Link } from "react-router-dom";
-// import LogoImg from "../assets/cropped-LOGO_ICTAK-Small.png";
+import { FaBriefcase } from "react-icons/fa";
 
 const navItems = [
   { label: "Dashboard", icon: <LayoutDashboard />, to: "/admin/dashboard" },
   { label: "Category", icon: <Folder />, to: "/admin/category" },
   { label: "Add category", icon: <FolderPlus />, to: "/admin/category/add" },
   { label: "Data sets", icon: <Sheet />, to: "/admin/datasets" },
+  { label: "Add Data set", icon: <PackagePlus />, to: "/admin/datasets/add" },
+  { label: "All Projects", icon: <FaBriefcase />, to: "/admin/projects" },
+  { label: "Add Project", icon: <FilePlus />, to: "/admin/projects/add" },
   { label: "Add user", icon: <UserPlus />, to: "/admin/users/add" },
-  { label: "Activity logs", icon: <FileBarChart />, to: "/admin/activity" },
+  { label: "Activity logs", icon: <FileBarChart />, to: "/admin/user-activity" },
+  
+
 ];
 
 const Sidebar = () => {

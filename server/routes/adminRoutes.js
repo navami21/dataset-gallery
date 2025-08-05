@@ -20,47 +20,65 @@ const upload = multer({ storage });
 function generateRandomPassword() {
   return Math.random().toString(36).slice(-6) + Math.random().toString(36).toUpperCase().slice(-2);
 }
-
 // Upload Excel file
-router.post("/upload-users",verifyToken,isAdmin, upload.single("file"), async (req, res) => {
+router.post("/upload-users", verifyToken, isAdmin, async (req, res) => {
   try {
-    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const users = xlsx.utils.sheet_to_json(sheet); // assumes headers like 'name' and 'email'
+    const { emails } = req.body;
 
-    const newUsers = [];
-
-    for (let userData of users) {
-      const { name, email } = userData;
-
-      const existing = await User.findOne({ email });
-      if (existing) continue; // skip if already exists
-
-      const rawPassword = generateRandomPassword();
-      const hashedPassword = await bcrypt.hash(rawPassword, 10);
-      const newUser = new User({
-        name,
-        email,
-        password: hashedPassword,
-        role: "user",
-      });
-      console.log("Before save - password:", newUser.password);
-
-      await newUser.save();
-      console.log("After save - password in DB:", (await User.findOne({ email })).password);
-
-      await sendPasswordEmail(email, rawPassword); // utility function to send email
-
-      newUsers.push(email);
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+      return res.status(400).json({ message: "No emails provided" });
     }
 
-    res.status(200).json({ message: "Users created", users: newUsers });
-    console.log("Parsed users from Excel:", users);
+    const success = [];
+    const exists = [];
+    const failed = [];
+
+    for (const email of emails) {
+      try {
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+          exists.push(email);
+          continue;
+        }
+
+        const rawPassword = generateRandomPassword();
+        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+        const newUser = new User({
+          name: email.split("@")[0],
+          email,
+          password: hashedPassword,
+          role: "user",
+        });
+
+        await newUser.save();
+        await sendPasswordEmail(email, rawPassword); // assumes email sending is async
+
+        success.push(email);
+
+      } catch (err) {
+        console.error("❌ Failed for ${email}:", err.message);
+        failed.push(email);
+      }
+    }
+
+    res.status(200).json({
+      message: "Upload complete",
+      success,
+      exists,
+      failed,
+    });
 
   } catch (err) {
-    res.status(500).json({ message: "Error uploading users", error: err.message });
+    console.error(" Server error during upload:", err.message);
+    res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 });
+
+// Preview users from Excel file
 router.get("/recent-users", async (req, res) => {
   try {
     const users = await User.find({ role: "user" }) // exclude admins
@@ -72,6 +90,120 @@ router.get("/recent-users", async (req, res) => {
   } catch (err) {
     console.error("Error fetching users:", err);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
+//   try {
+//     const logs = await ActivityLog.find()
+//       .populate({
+//         path: "user",
+//         match: { role: "user" }, // Exclude admin logs
+//         select: "name email role",
+//       })
+//       .populate({
+//         path: "dataset",
+//         select: "title",
+//       })
+//       .sort({ timestamp: 1 });
+
+//     const userLogsMap = {};
+
+//     logs.forEach(log => {
+//       // 🔒 Skip logs with null user (admins)
+//       if (!log.user) return;
+
+//       const userId = log.user._id.toString();
+
+//       if (!userLogsMap[userId]) {
+//         userLogsMap[userId] = {
+//           user: {
+//             name: log.user.name,
+//             email: log.user.email,
+//           },
+//           sessions: [],
+//         };
+//       }
+
+//       const userSessions = userLogsMap[userId].sessions;
+
+//       if (log.action === "login") {
+//         userSessions.push({
+//           loginTime: log.timestamp,
+//           logoutTime: null,
+//           accessedContent: [],
+//           duration: null,
+//         });
+//       } else if (log.action === "logout") {
+//         const currentSession = userSessions[userSessions.length - 1];
+//         if (currentSession && !currentSession.logoutTime) {
+//           currentSession.logoutTime = log.timestamp;
+//           currentSession.duration = Math.round(
+//             (log.timestamp - currentSession.loginTime) / 60000
+//           ); // in minutes
+//         }
+//       } else {
+//         const currentSession = userSessions[userSessions.length - 1];
+//         if (currentSession) {
+//           const title = log.dataset?.title || "Unknown Dataset";
+//           if (!currentSession.accessedContent.includes(title)) {
+//             currentSession.accessedContent.push(title);
+//           }
+//         }
+//       }
+//     });
+
+//     const result = Object.values(userLogsMap)
+//       .flatMap(userEntry =>
+//         userEntry.sessions.map(session => ({
+//           user: userEntry.user,
+//           loginTime: session.loginTime,
+//           logoutTime: session.logoutTime,
+//           accessedContent: session.accessedContent,
+//           duration: session.duration,
+//         }))
+//       )
+//       .sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime));
+
+//     res.status(200).json(result);
+//   } catch (error) {
+//     console.error("Error in /admin/all-user-activity:", error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+// router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
+//   try {
+//     const logs = await ActivityLog.find()
+//       .populate("user", "name email")
+//       .populate("dataset", "title")
+//       .sort({ timestamp: -1 });
+
+//     res.json(logs);
+//   } catch (err) {
+//     console.error("Error fetching activity logs:", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// });
+
+router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const logs = await ActivityLog.find()
+      .populate({
+        path: "user",
+        match: { role: { $ne: "admin" } }, // exclude admin activity
+        select: "name email role"
+      })
+      .populate("dataset", "title")
+      .sort({ timestamp: -1 });
+
+    // remove logs where user is null (because they were admins filtered out above)
+    const filteredLogs = logs.filter(log => log.user);
+
+    res.json(filteredLogs);
+  } catch (err) {
+    console.error("Error fetching activity logs:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
@@ -94,6 +226,53 @@ router.get("/like/:datasetId", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
+const getLoginSessionsWithDuration = async (req, res) => {
+  try {
+    const logs = await ActivityLog.find({ action: { $in: ["login", "logout"] } })
+      .populate("user", "name email")
+      .sort({ timestamp: 1 });
+
+    const userSessions = {}; // to track sessions by user
+
+    logs.forEach(log => {
+      const userId = log.user._id.toString();
+
+      if (!userSessions[userId]) userSessions[userId] = [];
+
+      if (log.action === "login") {
+        userSessions[userId].push({ login: log.timestamp, logout: null });
+      } else if (log.action === "logout") {
+        const session = userSessions[userId].find(s => !s.logout);
+        if (session) session.logout = log.timestamp;
+      }
+    });
+
+    // Convert to summary list
+    const sessionSummary = [];
+
+    for (const userId in userSessions) {
+      const user = logs.find(log => log.user._id.toString() === userId)?.user;
+
+      userSessions[userId].forEach((session, index) => {
+        if (session.logout) {
+          const durationMs = new Date(session.logout) - new Date(session.login);
+          sessionSummary.push({
+            name: user.name,
+            email: user.email,
+            login: session.login,
+            logout: session.logout,
+            duration: Math.round(durationMs / 1000) + "s"
+          });
+        }
+      });
+    }
+
+    res.json(sessionSummary);
+  } catch (error) {
+    console.error("Error computing sessions:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 router.get("/comment/:datasetId", verifyToken, isAdmin, async (req, res) => {
   console.log("Querying for dataset ObjectId:", req.params.datasetId);
@@ -155,9 +334,29 @@ router.get("/user/:userId", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Error fetching activity", error: err.message });
   }
 });
+// preview-users (no email sent, only parsing Excel)
+router.post("/preview-users", verifyToken, isAdmin, upload.single("file"), async (req, res) => {
+  try {
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const users = xlsx.utils.sheet_to_json(sheet);
+
+    // return names & emails
+    const userPreviews = users.map((u) => ({
+      name: u.name,
+      email: u.email,
+    }));
+
+    res.status(200).json({ users: userPreviews });
+  } catch (err) {
+    res.status(500).json({ message: "Preview failed", error: err.message });
+  }
+});
 
 // Admin  to view user activity (login/logout + interactions)
-router.get("/admin/user-activity/:userId", verifyToken, async (req, res) => {
+router.get("/admin/user-activity/:userId", verifyToken,isAdmin, async (req, res) => {
+    console.log("Fetching activity for user:", req.params.userId);
+
   try {
     // Optional: Check if req.user is admin
     if (req.user.role !== "admin") {
@@ -165,6 +364,7 @@ router.get("/admin/user-activity/:userId", verifyToken, async (req, res) => {
     }
 
     const logs = await ActivityLog.find({ user: req.params.userId })
+    
       .populate("dataset", "title category")
       .sort({ timestamp: 1 });
 
@@ -238,4 +438,4 @@ router.get("/admin/stats", verifyToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;

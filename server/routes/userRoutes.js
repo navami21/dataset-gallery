@@ -6,6 +6,10 @@ const User = require("../model/userData");
 const { verifyToken } = require("../middleware/authMiddleware"); 
 const Like= require("../model/likeData");
 const Comment=require("../model/commentData");
+const ActivityLog = require("../model/activitylogData");
+const { sendResetLinkEmail } = require("../utils/emailSender");
+
+
 
 // Admin Registration 
 router.post("/register-admin", async (req, res) => {
@@ -52,6 +56,11 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+    await ActivityLog.create({
+  user: user._id,
+  action: "login",
+  timestamp: new Date(),
+});
 
     res.status(200).json({
       message: "Login successful",
@@ -67,6 +76,34 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Login failed", error: err.message });
   }
 });
+// router.post("/logout", verifyToken, async (req, res) => {
+//   try {
+//     await ActivityLog.create({
+//       user: req.user.userId,
+//       action: "logout",
+//       timestamp: new Date(),
+//     });
+
+//     res.status(200).json({ message: "Logout recorded" });
+//   } catch (err) {
+//     res.status(500).json({ message: "Logout failed", error: err.message });
+//   }
+// });
+// ✅ Logout route (backend)
+router.post("/logout", verifyToken, async (req, res) => {
+  try {
+    await ActivityLog.create({
+      user: req.user.userId,
+      action: "logout",
+      timestamp: new Date(),
+    });
+
+    res.status(200).json({ message: "Logout recorded" });
+  } catch (err) {
+    res.status(500).json({ message: "Logout failed", error: err.message });
+  }
+});
+
 router.put("/change-password", verifyToken, async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
@@ -109,6 +146,51 @@ router.put("/change-password", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Failed to change password", error: err.message });
   }
 });
+// 🔐 Step 1: Forgot password - send email with reset link
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "No user found with this email" });
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
+
+    await sendResetLinkEmail(user.email, user.name, resetLink);
+    console.log("Found user:", user.email);
+    console.log("Reset link:", resetLink);
+    res.status(200).json({ message: "Password reset link sent to your email" });
+  } catch (err) {
+    console.error("Error in /forgot-password route:", err);
+    res.status(500).json({ message: "Failed to send reset email", error: err.message });
+  }
+});
+
+// 🔐 Step 2: Reset password using token from email
+router.post("/reset-password/:token", async (req, res) => {
+  const { token } = req.params;
+  const { newPassword, confirmPassword } = req.body;
+
+  try {
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (err) {
+    res.status(400).json({ message: "Invalid or expired token", error: err.message });
+  }
+});
+
 //like a dataset
 router.post("/like/:datasetId", verifyToken, async (req, res) => {
   const { datasetId } = req.params;
@@ -159,35 +241,5 @@ router.get("/dataset/:datasetId/stats", verifyToken,async (req, res) => {
   }
 });
 
-//post like for project
-router.post("/like/project/:projectId", verifyToken, async (req, res) => {
-  const { projectId } = req.params;
-  const userId = req.user.userId;
-
-  try {
-    const existing = await Like.findOne({ user: userId, project: projectId });
-    if (existing) return res.status(400).json({ message: "Already liked" });
-
-    const like = new Like({ user: userId, project: projectId });
-    await like.save();
-    res.status(201).json({ message: "Project liked" });
-  } catch (err) {
-    res.status(500).json({ message: "Error liking project", error: err.message });
-  }
-});
-//comment on project
-router.post("/comment/project/:projectId", verifyToken, async (req, res) => {
-  const { projectId } = req.params;
-  const userId = req.user.userId;
-  const { comment } = req.body;
-
-  try {
-    const newComment = new Comment({ user: userId, project: projectId, comment });
-    await comment.save();
-    res.status(201).json({ message: "Comment added to project" });
-  } catch (err) {
-    res.status(500).json({ message: "Error commenting on project", error: err.message });
-  }
-});
 
 module.exports = router;

@@ -1,63 +1,80 @@
-// src/pages/ProjectByDataset.jsx
-import  { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 
-const ProjectByDataset = () => {
-  const { id } = useParams();
+const ProjectsByDataset = () => {
+  const { datasetId } = useParams();
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("logintoken");
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-            const res = await axiosInstance.get(`/projects/dataset/${id}`, {
-        headers: {
-          token: localStorage.getItem("logintoken"),
-        },
-      });
-        setProjects(res.data);
+        const res = await axiosInstance.get(`/projects/dataset/${datasetId}`, {
+          headers: { token }
+        });
+        setProjects(res.data.projects);
       } catch (err) {
-        console.error("Error fetching projects:", err);
+        console.error("Error fetching projects by dataset:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [id]);
+  }, [datasetId]);
+
+  if (loading) return <div className="text-center mt-10">Loading Projects...</div>;
+
+  if (projects.length === 0) {
+    return <div className="text-center mt-10 text-gray-600">No projects found for this dataset.</div>;
+  }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-semibold mb-4">Alumni Projects</h1>
-      {projects.length === 0 ? (
-        <p className="text-gray-600">No projects found for this dataset.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map((project) => (
-            <div key={project._id} className="bg-white p-4 rounded shadow">
-              {project.image && (
-                <img
-                  src={`http://localhost:3000${project.image}`}
-                  alt={project.title}
-                  className="h-40 w-full object-cover rounded mb-3"
-                />
-              )}
-              <h2 className="text-xl font-bold">{project.title}</h2>
-              <p className="text-gray-700">{project.description}</p>
-              {project.link && (
-                <a
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline block mt-2"
-                >
-                  View Project
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="p-6">
+      {/* Back Button */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-gray-600 text-white px-4 py-2 rounded font-semibold hover:bg-gray-400 hover:text-black  transition"
+        >
+          ← Back
+        </button>
+      </div>
+
+      {/* Heading */}
+      <h2 className="text-black text-center font-semibold text-2xl mb-6">
+        Available Projects
+      </h2>
+
+      {/* Project Cards */}
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {projects.map((project) => (
+          <div
+            key={project._id}
+            className="bg-white shadow-md rounded-xl p-4 hover:shadow-lg transition"
+          >
+            <img
+              src={`http://localhost:3000${project.image}`}
+              alt={project.title}
+              className="w-full h-40 object-cover rounded-lg mb-3"
+            />
+            <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
+
+            <Link
+              to={`/projects/${project._id}`}
+              className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition inline-block mt-2"
+            >
+              View Details
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default ProjectByDataset;
+export default ProjectsByDataset;

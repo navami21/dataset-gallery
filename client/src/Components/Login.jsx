@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
+import {  Link } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -72,9 +73,12 @@ const Login = () => {
             />
           </div>
 
-          <p className="text-sm text-center mb-6 text-gray-600 cursor-pointer hover:underline">
-            Forgot password?
-          </p>
+          <Link
+            to="/forgot-password"
+            className="text-sm text-center mb-6 text-gray-600 hover:underline block"
+          >
+          Forgot password?
+        </Link>
 
           <button
             type="submit"

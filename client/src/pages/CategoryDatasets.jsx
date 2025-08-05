@@ -17,6 +17,16 @@ const CategoryDatasets = () => {
         console.error("Error fetching category name:", err);
       }
     };
+const handleAccessContent = async (datasetId) => {
+  try {
+    await axiosInstance.post("/activity/addAccessedContent", {
+      action: "viewed",
+      datasetId
+    });
+  } catch (error) {
+    console.error("Error logging activity:", error);
+  }
+};
 
     const fetchDatasets = async () => {
       try {
@@ -52,8 +62,10 @@ const CategoryDatasets = () => {
               {dataset.description}
             </p>
             <Link
-              to={`/dataset/${dataset._id}`}
+              to={`/dataset/details/${dataset._id}`}
               className="inline-block bg-[#0099cc] hover:bg-[#5EABD6]  hover:text-black text-white text-sm px-4 py-2 mt-2 rounded transition"
+                onClick={() => handleAccessContent(dataset._id)}
+
             >
               View Details
             </Link>

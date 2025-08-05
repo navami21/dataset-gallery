@@ -20,5 +20,11 @@ const isAdmin = (req, res, next) => {
   }
   next();
 };
+const isUser = (req, res, next) => {
+  if (req.user?.role !== "user") {
+    return res.status(403).json({ message: "Forbidden: Users only." });
+  }
+  next();
+};
 
-module.exports = { verifyToken, isAdmin };
+module.exports = { verifyToken, isAdmin,isUser };
