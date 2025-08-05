@@ -93,98 +93,7 @@ router.get("/recent-users", async (req, res) => {
   }
 });
 
-// router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
-//   try {
-//     const logs = await ActivityLog.find()
-//       .populate({
-//         path: "user",
-//         match: { role: "user" }, // Exclude admin logs
-//         select: "name email role",
-//       })
-//       .populate({
-//         path: "dataset",
-//         select: "title",
-//       })
-//       .sort({ timestamp: 1 });
 
-//     const userLogsMap = {};
-
-//     logs.forEach(log => {
-//       // 🔒 Skip logs with null user (admins)
-//       if (!log.user) return;
-
-//       const userId = log.user._id.toString();
-
-//       if (!userLogsMap[userId]) {
-//         userLogsMap[userId] = {
-//           user: {
-//             name: log.user.name,
-//             email: log.user.email,
-//           },
-//           sessions: [],
-//         };
-//       }
-
-//       const userSessions = userLogsMap[userId].sessions;
-
-//       if (log.action === "login") {
-//         userSessions.push({
-//           loginTime: log.timestamp,
-//           logoutTime: null,
-//           accessedContent: [],
-//           duration: null,
-//         });
-//       } else if (log.action === "logout") {
-//         const currentSession = userSessions[userSessions.length - 1];
-//         if (currentSession && !currentSession.logoutTime) {
-//           currentSession.logoutTime = log.timestamp;
-//           currentSession.duration = Math.round(
-//             (log.timestamp - currentSession.loginTime) / 60000
-//           ); // in minutes
-//         }
-//       } else {
-//         const currentSession = userSessions[userSessions.length - 1];
-//         if (currentSession) {
-//           const title = log.dataset?.title || "Unknown Dataset";
-//           if (!currentSession.accessedContent.includes(title)) {
-//             currentSession.accessedContent.push(title);
-//           }
-//         }
-//       }
-//     });
-
-//     const result = Object.values(userLogsMap)
-//       .flatMap(userEntry =>
-//         userEntry.sessions.map(session => ({
-//           user: userEntry.user,
-//           loginTime: session.loginTime,
-//           logoutTime: session.logoutTime,
-//           accessedContent: session.accessedContent,
-//           duration: session.duration,
-//         }))
-//       )
-//       .sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime));
-
-//     res.status(200).json(result);
-//   } catch (error) {
-//     console.error("Error in /admin/all-user-activity:", error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
-// router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
-//   try {
-//     const logs = await ActivityLog.find()
-//       .populate("user", "name email")
-//       .populate("dataset", "title")
-//       .sort({ timestamp: -1 });
-
-//     res.json(logs);
-//   } catch (err) {
-//     console.error("Error fetching activity logs:", err);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// });
 
 router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
   try {
@@ -436,6 +345,43 @@ router.get("/admin/stats", verifyToken, async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch all stats", error: err.message });
   }
+
+
+  //contact page route
+const ContactMessage = require("../model/contactMessage");
+
+router.get("/contact-messages", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const messages = await ContactMessage.find().sort({ createdAt: -1 });
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch messages", error: err.message });
+  }
+});
+const { sendReplyEmail } = require("../utils/emailSender");
+
+router.put("/contact-messages/:id/reply", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const { reply } = req.body;
+    const message = await ContactMessage.findById(req.params.id);
+
+    if (!message) return res.status(404).json({ message: "Message not found" });
+
+    message.reply = reply;
+    await message.save();
+
+    // If userId is present, show in-app notification (frontend handles this)
+    if (!message.userId) {
+      await sendReplyEmail(message.email, message.name, reply);
+    }
+
+    res.status(200).json({ message: "Reply sent successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to send reply", error: err.message });
+  }
+});
+
+
 });
 
 module.exports = router;

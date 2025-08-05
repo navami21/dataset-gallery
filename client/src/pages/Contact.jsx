@@ -1,8 +1,24 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { useState } from "react";
+import axios from "axios"; 
 
 const Contact = () => {
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    await axios.post("/api/contact", formData);
+    alert("Message sent successfully");
+    setFormData({ name: "", email: "", message: "" });
+  } catch (error) {
+    console.error(error);
+    alert("Failed to send message");
+  }
+};
+
   return (
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center px-6 py-16"
@@ -52,7 +68,45 @@ const Contact = () => {
         </motion.div>
 
         {/* Right Side – Contact Form */}
-        <motion.form
+           <motion.form
+      className="space-y-5"
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.5 }}
+      onSubmit={handleSubmit}
+    >
+      <input
+        type="text"
+        placeholder="Your Name"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        required
+        className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0099CC]"
+      />
+      <input
+        type="email"
+        placeholder="Your Email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        required
+        className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0099CC]"
+      />
+      <textarea
+        rows="4"
+        placeholder="Your Message"
+        value={formData.message}
+        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+        required
+        className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0099CC]"
+      ></textarea>
+      <button
+        type="submit"
+        className="w-full bg-[#0099CC] text-white py-3 rounded-xl hover:bg-[#007da8] transition font-semibold tracking-wide"
+      >
+        Send Message
+      </button>
+    </motion.form>
+        {/* <motion.form
           className="space-y-5"
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -79,7 +133,7 @@ const Contact = () => {
           >
             Send Message
           </button>
-        </motion.form>
+        </motion.form> */}
       </motion.div>
     </div>
   );
