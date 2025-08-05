@@ -10,6 +10,7 @@ import {
   FaHeart,
   FaCommentDots,
 } from "react-icons/fa";
+import {  FaRegHeart } from "react-icons/fa";
 import { MdGridView } from "react-icons/md";
 import { useEffect } from "react";
 import { useState } from "react";
@@ -26,6 +27,7 @@ const DatasetDetails = () => {
 const [showCommentList, setShowCommentList] = useState(false);
 const [popupMessage, setPopupMessage] = useState("");
 const [showPopup, setShowPopup] = useState(false);
+const [isLiked, setIsLiked] = useState(false);
 
 
 
@@ -45,16 +47,18 @@ const [showPopup, setShowPopup] = useState(false);
         setComments(commentRes.data);
         setUserRole(localStorage.getItem("role"));
         // ✅ Log activity
+       const userId = localStorage.getItem("userId");
+      const likedByUser = likeRes.data.some(like => like.user?._id === userId);
+      setIsLiked(likedByUser);
+
       await axiosInstance.post("/activity/addAccessedContent", {
         action: "viewed",
         datasetId: id,
       });
-
-      } catch (err) {
-        console.error("Error fetching dataset or engagement data:", err);
-      }
-    };
-
+    } catch (err) {
+      console.error("Error fetching dataset or engagement data:", err);
+    }
+  };
     fetchDatasetAndEngagement();
     
   }, [id]);
@@ -64,16 +68,16 @@ const [showPopup, setShowPopup] = useState(false);
     await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
     const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
     setLikes(updated.data);
+
+    // Toggle isLiked
+    const userId = localStorage.getItem("userId");
+    const likedByUser = updated.data.some(like => like.user?._id === userId);
+    setIsLiked(likedByUser);
+
   } catch (err) {
-    const status = err.response?.status;
-    if (status === 400 || status === 409) {
-      setPopupMessage("You've already liked this dataset.");
-      setShowPopup(true);
-    } else {
-      setPopupMessage("Something went wrong while liking the dataset.");
-      setShowPopup(true);
-      console.error(err);
-    }
+    console.error(err);
+    setPopupMessage("Something went wrong while liking/unliking.");
+    setShowPopup(true);
   }
 };
 
@@ -194,7 +198,7 @@ const handleDownloadCSV = async () => {
 </span>
 
             </div>
-            {userRole === "user" && (
+            {/* {userRole === "user" && (
   <div className="flex items-center gap-4">
     <button
       onClick={handleLike}
@@ -202,6 +206,24 @@ const handleDownloadCSV = async () => {
       title="Like"
     >
       <FaHeart className="text-xl" />
+    </button>
+    <button
+      onClick={() => setShowCommentBox(!showCommentBox)}
+      className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+      title="Comment"
+    >
+      <FaCommentDots className="text-xl" />
+    </button>
+  </div>
+)} */}
+{userRole === "user" && (
+  <div className="flex items-center gap-4">
+    <button
+      onClick={handleLike}
+      className={`flex items-center gap-1 ${isLiked ? "text-red-600" : "text-gray-500"} hover:text-red-700`}
+      title={isLiked ? "Unlike" : "Like"}
+    >
+      {isLiked ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl" />}
     </button>
     <button
       onClick={() => setShowCommentBox(!showCommentBox)}
