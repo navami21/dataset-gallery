@@ -2,98 +2,74 @@
 
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../axiosinterceptor";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaEye } from "react-icons/fa";
 
 const AdminAllUserActivity = () => {
-  const [allLogs, setAllLogs] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userSessions, setUserSessions] = useState([]);
+  const [userActions, setUserActions] = useState([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
+
   const [emailFilter, setEmailFilter] = useState("");
   const [filterDate, setFilterDate] = useState("");
 
+  // Fetch all logs, deduplicate users by latest login
   useEffect(() => {
-    const fetchActivities = async () => {
+    const fetchUsers = async () => {
       try {
         const res = await axiosInstance.get("/admin/all-user-activity");
-        const activities = res.data;
 
-        const sortedLogs = activities.sort(
-          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-        );
 
-        const enrichedLogs = [];
-        const loginMap = {};
-
-        sortedLogs.forEach((log) => {
-          const userId = log.user?._id;
-          const timestamp = new Date(log.timestamp);
-
-          if (log.action === "login") {
-            loginMap[userId] = {
-              user: log.user,
-              loginTime: timestamp,
-              action: "login",
-              datasetOrPage: "—",
-              logoutTime: "—",
-            };
-          } else if (log.action === "logout" && loginMap[userId]) {
-            enrichedLogs.push({
-              ...loginMap[userId],
-              action: "session",
-              logoutTime: timestamp,
-            });
-            delete loginMap[userId];
-          } else {
-            enrichedLogs.push({
-              user: log.user,
-              loginTime: "—",
-              logoutTime: "—",
-              action: log.action,
-              datasetOrPage: log.dataset?.title || log.page || "—",
-              timestamp,
-            });
-          }
-        });
-
-        setAllLogs(enrichedLogs);
-        setLoading(false);
+        setUsers(res.data);
       } catch (error) {
-        console.error("Error fetching activities:", error);
+        console.error("Error fetching users:", error);
+      } finally {
         setLoading(false);
       }
     };
-
-    fetchActivities();
+    fetchUsers();
   }, []);
 
-  const filteredLogs = allLogs
-  .filter((log) => log.user?.role !== "admin") // exclude admin activity
-  .filter((log) => {
-    const emailMatch = log.user?.email
-      ?.toLowerCase()
-      .includes(emailFilter.toLowerCase());
+  const filtered = users.filter((u) => {
+  const emailMatch = u.user?.email
+    ?.toLowerCase()
+    .includes(emailFilter.toLowerCase());
 
-    const timestamp = new Date(log.timestamp || log.loginTime);
-    const filter = filterDate ? new Date(filterDate) : null;
-    console.log(log.user); // check role value
+  const timestamp = new Date(u.lastLogin || u.lastLogout);
+  const filter = filterDate ? new Date(filterDate) : null;
+
+  const inDate =
+    !filter ||
+    (timestamp.getFullYear() === filter.getFullYear() &&
+      timestamp.getMonth() === filter.getMonth() &&
+      timestamp.getDate() === filter.getDate());
+
+  return emailMatch && inDate;
+});
 
 
-    const inDate =
-      !filter ||
-      (timestamp.getFullYear() === filter.getFullYear() &&
-        timestamp.getMonth() === filter.getMonth() &&
-        timestamp.getDate() === filter.getDate());
-
-    return emailMatch && inDate;
-  });
-
+  const handleViewActivity = async (userId) => {
+    setSelectedUser(userId);
+    setLoadingActivity(true);
+    try {
+      const res = await axiosInstance.get(`/admin/user-activity/${userId}`);
+      setUserSessions(res.data.sessions || []);
+      setUserActions(res.data.allActions || []);
+    } catch (error) {
+      console.error("Error fetching user activity:", error);
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
 
   return (
     <div className="p-4 overflow-x-auto">
-      <h2 className="text-xl font-semibold mb-4">All User Activity Logs</h2>
+      <h2 className="text-xl font-semibold mb-4">User Activity Overview</h2>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-4 items-center">
@@ -115,48 +91,141 @@ const AdminAllUserActivity = () => {
         />
       </div>
 
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr className="bg-gray-200 text-left">
-            <th className="py-2 px-4 border">#</th>
-            <th className="py-2 px-4 border">Name</th>
-            <th className="py-2 px-4 border">Email</th>
-            <th className="py-2 px-4 border">Login Time</th>
-            <th className="py-2 px-4 border">Action</th>
-            <th className="py-2 px-4 border">Dataset/Page</th>
-            <th className="py-2 px-4 border">Logout Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredLogs.length === 0 ? (
-            <tr>
-              <td colSpan="7" className="text-center py-4">
-                No matching activity logs.
-              </td>
-            </tr>
-          ) : (
-            filteredLogs.map((log, index) => (
-              <tr key={index} className="border-b">
-                <td className="py-2 px-4 border">{index + 1}</td>
-                <td className="py-2 px-4 border">{log.user?.name || "—"}</td>
-                <td className="py-2 px-4 border">{log.user?.email || "—"}</td>
-                <td className="py-2 px-4 border">
-                  {log.loginTime === "—"
-                    ? "—"
-                    : new Date(log.loginTime).toLocaleString()}
-                </td>
-                <td className="py-2 px-4 border capitalize">{log.action}</td>
-                <td className="py-2 px-4 border">{log.datasetOrPage}</td>
-                <td className="py-2 px-4 border">
-                  {log.logoutTime === "—"
-                    ? "—"
-                    : new Date(log.logoutTime).toLocaleString()}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      {/* Table */}
+     <table className="min-w-full border border-gray-200 rounded-lg shadow-md overflow-hidden">
+  <thead className="bg-[#0099cc] text-white">
+    <tr>
+      <th className="py-3 px-4 text-left font-semibold">#</th>
+      <th className="py-3 px-4 text-left font-semibold">User</th>
+      <th className="py-3 px-4 text-left font-semibold">Last Login</th>
+      <th className="py-3 px-4 text-left font-semibold">Last Logout</th>
+      <th className="py-3 px-4 text-center font-semibold">View</th>
+    </tr>
+  </thead>
+  <tbody>
+    {filtered.length === 0 ? (
+      <tr>
+        <td colSpan="5" className="text-center py-6 text-gray-500">
+          No matching users.
+        </td>
+      </tr>
+    ) : (
+      filtered.map((u, index) => (
+        <tr
+          key={index}
+          className={`border-b hover:bg-blue-50 transition-colors ${
+            index % 2 === 0 ? "bg-white" : "bg-gray-50"
+          }`}
+        >
+          <td className="py-3 px-4">{index + 1}</td>
+          <td className="py-3 px-4">
+            <div className="font-medium text-gray-900">{u.user?.name || "—"}</div>
+            <div className="text-sm text-gray-600">{u.user?.email || "—"}</div>
+          </td>
+          <td className="py-3 px-4">
+            <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm">
+            {u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "—"}
+            </span>
+          </td>
+          <td className="py-3 px-4">
+            {u.lastLogout && u.lastLogin && new Date(u.lastLogout) > new Date(u.lastLogin) ? (
+              <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-sm">
+                {new Date(u.lastLogout).toLocaleString()}
+              </span>
+            ) : (
+              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm">
+                Active
+              </span>
+            )}
+          </td>
+          <td className="py-3 px-4 text-center">
+            <FaEye
+              className="text-blue-600 cursor-pointer hover:text-blue-800 hover:scale-110 transition-transform"
+              onClick={() => handleViewActivity(u.user._id)}
+            />
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
+
+
+
+      {/* Modal */}
+      {selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-lg p-6 w-[700px] max-h-[80vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Activity Details</h3>
+
+            {loadingActivity ? (
+              <p>Loading...</p>
+            ) : (
+              <>
+                {/* Sessions */}
+                <h4 className="font-semibold mb-2">Sessions</h4>
+                {userSessions.length === 0 ? (
+                  <p className="text-gray-500 mb-4">No sessions found.</p>
+                ) : (
+                  userSessions.map((session, idx) => (
+                    <div key={idx} className="mb-3 border p-3 rounded">
+                      <p>
+                        <strong>Login:</strong>{" "}
+                        {new Date(session.loginTime).toLocaleString()}
+                      </p>
+                      <p>
+                        <strong>Logout:</strong>{" "}
+                        {session.logoutTime
+                          ? new Date(session.logoutTime).toLocaleString()
+                          : "Active"}
+                      </p>
+                      <p>
+                        <strong>Duration:</strong>{" "}
+                        {session.durationMinutes} min
+                      </p>
+                      {session.interactions?.length > 0 && (
+                        <div className="mt-2">
+                          <strong>Interactions:</strong>
+                          <ul className="list-disc ml-5">
+                            {session.interactions.map((a, i) => (
+                              <li key={i}>
+                                {a.action} — {a.dataset?.title || "—"} (
+                                {new Date(a.timestamp).toLocaleString()})
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+
+                {/* All Actions */}
+                <h4 className="font-semibold mt-4 mb-2">All Actions</h4>
+                {userActions.length === 0 ? (
+                  <p className="text-gray-500">No actions found.</p>
+                ) : (
+                  <ul className="list-disc ml-5">
+                    {userActions.map((a, i) => (
+                      <li key={i}>
+                        {a.action} — {a.dataset || "—"} (
+                        {new Date(a.timestamp).toLocaleString()})
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+
+            <button
+              className="mt-4 bg-gray-600 text-white px-4 py-2 rounded"
+              onClick={() => setSelectedUser(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
