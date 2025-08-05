@@ -12,13 +12,15 @@ router.post("/:datasetId", verifyToken, isUser, async (req, res) => {
     // Check if already liked
     const existing = await Like.findOne({ user: userId, dataset: datasetId });
     if (existing) {
-      return res.status(400).json({ message: "Already liked" });
+      await Like.findByIdAndDelete(existing._id);
+      return res.status(200).json({ message: "Unliked successfully" });
     }
 
+    // If not liked, create new like
     const like = await Like.create({ user: userId, dataset: datasetId });
     res.status(201).json({ message: "Liked successfully", like });
   } catch (err) {
-    res.status(500).json({ message: "Error liking dataset", error: err });
+    res.status(500).json({ message: "Error toggling like", error: err });
   }
 });
 
