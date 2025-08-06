@@ -1,3 +1,4 @@
+import { Link, useNavigate } from "react-router-dom";
 import { FaLinkedin, FaEnvelope, FaGlobe } from "react-icons/fa";
 import "./Footer.css";
 
