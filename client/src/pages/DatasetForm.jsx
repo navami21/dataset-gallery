@@ -243,12 +243,30 @@ const DatasetForm = () => {
 </div>
 
     {/* Submit */}
-    <button
+    {/* <button
       type="submit"
       className="w-full bg-[#0099cc] hover:bg-[#007aab] text-white font-semibold py-2.5 rounded-lg transition duration-300"
     >
       {datasetId ? "Update Dataset" : "Add Dataset"}
-    </button>
+    </button> */}
+    {/* Submit & Cancel */}
+<div className="flex gap-4">
+  <button
+    type="submit"
+    className="flex-1 bg-[#0099cc] hover:bg-[#007aab] text-white font-semibold py-2.5 rounded-lg transition duration-300"
+  >
+    {datasetId ? "Update Dataset" : "Add Dataset"}
+  </button>
+
+  <button
+    type="button"
+    onClick={() => navigate("/admin/datasets")}
+    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 rounded-lg transition duration-300"
+  >
+    Cancel
+  </button>
+</div>
+
   </form>
 </div>
 

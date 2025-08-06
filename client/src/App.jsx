@@ -29,6 +29,8 @@ import ResetPassword from "./Components/ResetPassword";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminUserActivity from "./Components/AdminUserActivity";
+import AdminMessages from "./Components/AdminMessages";
+import UserNotifications from "./Components/UserNotifications";
 
 const App = () => {
   return (
@@ -54,6 +56,7 @@ const App = () => {
           <Route path="category" element={<ViewCategories />} />
           <Route path="category/add" element={<AddEditCategory />} />
           <Route path="category/edit/:id" element={<AddEditCategory />} />
+=
           {/* <Route path="category/:categoryId/datasets" element={<CategoryDatasets />} /> */}
           <Route path="datasets" element={<DatasetView />} />
           <Route path="datasets/add" element={<DatasetForm />} />
@@ -64,6 +67,7 @@ const App = () => {
           <Route path="datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
           <Route path="edit-project/:id" element={<AddProjectForm />} />
           <Route path="users/add" element={<UserUploadPreview/>} />
+          <Route path="messages" element={<AdminMessages/>} />
           <Route path="/admin/user-activity" element={<AdminUserActivity />} />
 
 
@@ -75,11 +79,11 @@ const App = () => {
 
         <Route element={<PrivateRoute allowedRoles={['user', 'admin']} />}>
         <Route path="/projects/:id" element={<Main child={<ProjectDetails />} />} />
-        <Route path="/projects/datasets/:id" element={<Main child={<ProjectDetails />} />} />
+        <Route path="/projects/datasets/:id" element={<ProjectDetails />} />
        <Route path="/datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
        <Route path="/change-password" element={<Main child={<ChangePassword />} />} />
         <Route path="/category/:categoryId/datasets" element={<Main child={<CategoryDatasets />} />} />
-        <Route path="/dataset/details/:id" element={<Main child={<DatasetDetails />} />}/>
+        <Route path="/dataset/details/:id" element={<DatasetDetails />} />
         </Route>
 
         {/* Other user routes */}
@@ -87,6 +91,8 @@ const App = () => {
         <Route path="/userdashboard" element={<Main child={<UserDashboard />} />} />
         <Route path="/viewdsa" element={<Main child={<ViewDSA />} />} />
         <Route path="/datasetdetails" element={<Main child={<DatasetDetails />} />} />
+          <Route path="/notifications" element={<Main child={<UserNotifications />} />} />
+
         {/* <Route path="/category/:id" element={<Main child={<DatasetView />} />} /> */}
         {/* <Route path="/category/:categoryId/datasets" element={<CategoryDatasets />} /> */}
 

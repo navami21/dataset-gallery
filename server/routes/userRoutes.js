@@ -49,7 +49,9 @@ router.post("/login", async (req, res) => {
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
+ user.isOnline = true;
+    user.lastActive = new Date();
+    await user.save();
     // Generate JWT
     const token = jwt.sign(
       { userId: user._id, role: user.role },
@@ -70,28 +72,21 @@ router.post("/login", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        isOnline: user.isOnline
+
       },
     });
   } catch (err) {
     res.status(500).json({ message: "Login failed", error: err.message });
   }
 });
-// router.post("/logout", verifyToken, async (req, res) => {
-//   try {
-//     await ActivityLog.create({
-//       user: req.user.userId,
-//       action: "logout",
-//       timestamp: new Date(),
-//     });
 
-//     res.status(200).json({ message: "Logout recorded" });
-//   } catch (err) {
-//     res.status(500).json({ message: "Logout failed", error: err.message });
-//   }
-// });
-// ✅ Logout route (backend)
 router.post("/logout", verifyToken, async (req, res) => {
   try {
+    await User.findByIdAndUpdate(req.user.userId, {
+      isOnline: false,
+      lastActive: new Date()
+    });
     await ActivityLog.create({
       user: req.user.userId,
       action: "logout",
@@ -103,7 +98,18 @@ router.post("/logout", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Logout failed", error: err.message });
   }
 });
-
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("name email");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error("Error in /me route:", err);
+    res.status(500).json({ message: "Error fetching user info" });
+  }
+});
 router.put("/change-password", verifyToken, async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;

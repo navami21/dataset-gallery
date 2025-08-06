@@ -1,59 +1,101 @@
-// import React from "react";
-// import { useNavigate } from "react-router-dom";
 
-// const AlumniProjectsList = ({ alumniProjects }) => {
+// import React, { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import axiosInstance from "../axiosinterceptor";
+// import { FaArrowRight } from "react-icons/fa";
+
+// const AlumniProjectsList = () => {
+//   const [alumniProjects, setAlumniProjects] = useState([]);
 //   const navigate = useNavigate();
 
+//   useEffect(() => {
+//     axiosInstance
+//       .get("/projects")
+//       .then((res) => {
+//         setAlumniProjects(res.data);
+//       })
+//       .catch((err) => {
+//         console.error("Error fetching projects:", err);
+//       });
+//   }, []);
+
 //   const handleViewDetails = (id) => {
-//     navigate(`/project/${id}`);
+//     navigate(`/projects/${id}`);
 //   };
 
 //   return (
-//     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 p-4">
-//       {alumniProjects.map((project) => (
-//         <div
-//           key={project._id}
-//           className="bg-white shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow"
-//         >
-//           {project.images && project.images.length > 0 && (
-//             <img
-//               src={project.images[0]}
-//               alt={project.title}
-//               className="w-full h-48 object-cover"
-//             />
-//           )}
-//           <div className="p-4">
-//             <h2 className="text-lg font-semibold text-gray-800 mb-2">
-//               {project.title}
-//             </h2>
-//             <button
-//               onClick={() => handleViewDetails(project._id)}
-//               className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
-//             >
-//               View Details
-//             </button>
-//           </div>
-//         </div>
-//       ))}
+//     <div className="p-6 max-w-7xl mx-auto">
+//       <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+//         Alumni Projects
+//       </h1>
+
+//       <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+//         {alumniProjects.length > 0 ? (
+//           alumniProjects.map((project) => (
+//           <div
+//   key={project._id}
+//   className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
+// >
+//   {/* Project Image */}
+//   <div className="relative h-48 overflow-hidden">
+//     {project.image && project.image.length > 0 ? (
+//       <img
+//         src={`http://localhost:3000${project.image[0]}`}
+//         alt={project.title}
+//         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+//       />
+//     ) : (
+//       <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+//         No Image
+//       </div>
+//     )}
+//   </div>
+
+//   {/* Project Details */}
+//   <div className="p-5 flex flex-col flex-1">
+//     <h2 className="text-lg font-semibold text-gray-800 line-clamp-3">
+//       {project.title}
+//     </h2>
+//     <p className="text-gray-500 text-sm line-clamp-3 mt-2">
+//       {project.description || "No description available."}
+//     </p>
+
+//     <button
+//       onClick={() => handleViewDetails(project._id)}
+//       className="mt-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#00b4d8] to-[#0096c7] text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] transition-all"
+//     >
+//       View Details
+//       <FaArrowRight size={14} />
+//     </button>
+//   </div>
+// </div>
+
+//           ))
+//         ) : (
+//           <p className="text-center text-gray-500 col-span-full">
+//             No projects found.
+//           </p>
+//         )}
+//       </div>
 //     </div>
 //   );
 // };
 
 // export default AlumniProjectsList;
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
+import { FaArrowRight, FaSearch } from "react-icons/fa";
 
 const AlumniProjectsList = () => {
   const [alumniProjects, setAlumniProjects] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
     axiosInstance
-      .get("/projects", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("/projects")
       .then((res) => {
         setAlumniProjects(res.data);
       })
@@ -66,32 +108,67 @@ const AlumniProjectsList = () => {
     navigate(`/projects/${id}`);
   };
 
+  // Filter projects based on search
+  const filteredProjects = alumniProjects.filter((project) =>
+    project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">All Alumni Projects</h1>
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {alumniProjects.length > 0 ? (
-          alumniProjects.map((project) => (
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+        Alumni Projects
+      </h1>
+
+      {/* Search Bar */}
+      <div className="relative max-w-md mx-auto mb-8">
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search projects..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00b4d8]"
+        />
+      </div>
+
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {filteredProjects.length > 0 ? (
+          filteredProjects.map((project) => (
             <div
               key={project._id}
-              className="bg-white shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow"
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
             >
-              {project.images && project.images.length > 0 && (
-                <img
-                  src={project.images[0]}
-                  alt={project.title}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <div className="p-4">
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+              {/* Project Image */}
+              <div className="relative h-48 overflow-hidden">
+                {project.image && project.image.length > 0 ? (
+                  <img
+                    src={`http://localhost:3000${project.image[0]}`}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                    No Image
+                  </div>
+                )}
+              </div>
+
+              {/* Project Details */}
+              <div className="p-5 flex flex-col flex-1">
+                <h2 className="text-lg font-semibold text-gray-800 line-clamp-3">
                   {project.title}
                 </h2>
+                <p className="text-gray-500 text-sm line-clamp-3 mt-2">
+                  {project.description || "No description available."}
+                </p>
+
                 <button
                   onClick={() => handleViewDetails(project._id)}
-                  className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition"
+                  className="mt-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#00b4d8] to-[#0096c7] text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] transition-all"
                 >
                   View Details
+                  <FaArrowRight size={14} />
                 </button>
               </div>
             </div>

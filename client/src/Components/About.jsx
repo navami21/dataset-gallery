@@ -1,13 +1,10 @@
 
-
-
-
 import React from "react";
 import { motion } from "framer-motion";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 py-16 px-4 lg:px-12 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-[#ccefff] to-[#e0f7ff] py-16 px-4 lg:px-12 flex items-center justify-center">
       <motion.div
         className="bg-white shadow-xl rounded-3xl w-full max-w-6xl p-6 md:p-12 flex flex-col md:flex-row items-center"
         initial={{ opacity: 0, y: 40 }}

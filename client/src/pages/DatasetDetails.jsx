@@ -1,6 +1,7 @@
-// import React, { useEffect, useState } from "react";
+
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
+import { motion } from "framer-motion";
 import {
   FaFileCsv,
   FaRulerCombined,
@@ -8,33 +9,33 @@ import {
   FaTrash,
   FaDownload,
   FaHeart,
-  FaCommentDots,
+  FaCommentDots
 } from "react-icons/fa";
-import {  FaRegHeart } from "react-icons/fa";
 import { MdGridView } from "react-icons/md";
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const DatasetDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [dataset, setDataset] = useState(null);
   const [likes, setLikes] = useState([]);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [userRole, setUserRole] = useState("");
-  const [showCommentBox, setShowCommentBox] = useState(false);
-const [showCommentList, setShowCommentList] = useState(false);
-const [popupMessage, setPopupMessage] = useState("");
-const [showPopup, setShowPopup] = useState(false);
-const [isLiked, setIsLiked] = useState(false);
-
-
+  const [showCommentList, setShowCommentList] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("logintoken");
+  const userId = localStorage.getItem("userId");
+  const userName = localStorage.getItem("name") || localStorage.getItem("email");
 
+  // Fetch dataset + likes + comments
   useEffect(() => {
-    const fetchDatasetAndEngagement = async () => {
+    const fetchData = async () => {
       try {
         const [datasetRes, likeRes, commentRes] = await Promise.all([
           axiosInstance.get(`/datasets/${id}`, { headers: { token } }),
@@ -46,55 +47,146 @@ const [isLiked, setIsLiked] = useState(false);
         setLikes(likeRes.data);
         setComments(commentRes.data);
         setUserRole(localStorage.getItem("role"));
-        // ✅ Log activity
-       const userId = localStorage.getItem("userId");
-      const likedByUser = likeRes.data.some(like => like.user?._id === userId);
-      setIsLiked(likedByUser);
+        setIsLiked(likeRes.data.some(like => like.user?._id === userId));
 
-      await axiosInstance.post("/activity/addAccessedContent", {
-        action: "viewed",
-        datasetId: id,
-      });
-    } catch (err) {
-      console.error("Error fetching dataset or engagement data:", err);
-    }
-  };
-    fetchDatasetAndEngagement();
-    
-  }, [id]);
+        // Track activity
+        await axiosInstance.post("/activity/addAccessedContent", {
+          action: "viewed",
+          datasetId: id,
+        });
+      } catch (err) {
+        console.error("Error fetching dataset or engagement data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [id, token, userId]);
 
- const handleLike = async () => {
+  // const handleLike = async () => {
+  //   const newLikeState = !isLiked;
+
+  //   // Optimistic update
+  //   setIsLiked(newLikeState);
+  //   setLikes(prevLikes =>
+  //     newLikeState
+  //       ? [...prevLikes, { user: { _id: userId, name: userName } }]
+  //       : prevLikes.filter(like => like.user?._id !== userId)
+  //   );
+
+  //   // Show popup only if liking
+  //   if (newLikeState) {
+  //     setPopupMessage("You liked this dataset!");
+  //     setShowPopup(true);
+  //     setTimeout(() => setShowPopup(false), 1500); // auto-close
+  //   }
+
+  //   try {
+  //     await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
+  //     const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
+  //     setLikes(updated.data);
+  //     setIsLiked(updated.data.some(like => like.user?._id === userId));
+  //   } catch (err) {
+  //     console.error(err);
+  //     // rollback
+  //     setIsLiked(!newLikeState);
+  //     setLikes(prevLikes =>
+  //       !newLikeState
+  //         ? [...prevLikes, { user: { _id: userId, name: userName } }]
+  //         : prevLikes.filter(like => like.user?._id !== userId)
+  //     );
+  //   }
+  // };
+// const handleLike = async () => {
+//   const newLikeState = !isLiked;
+
+//   // Optimistic update
+//   setIsLiked(newLikeState);
+//   setLikes(prevLikes =>
+//     newLikeState
+//       ? [...prevLikes, { user: { _id: userId, name: userName } }]
+//       : prevLikes.filter(like => like.user?._id !== userId)
+//   );
+
+//   // Show popup message for like/unlike
+//   setPopupMessage(newLikeState ? "You liked this dataset!" : "You unliked this dataset!");
+//   setShowPopup(true);
+//   setTimeout(() => setShowPopup(false), 1500);
+
+//   try {
+//     await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
+//     const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
+//     setLikes(updated.data);
+//     setIsLiked(updated.data.some(like => like.user?._id === userId));
+//   } catch (err) {
+//     console.error(err);
+//     // rollback if error
+//     setIsLiked(!newLikeState);
+//     setLikes(prevLikes =>
+//       !newLikeState
+//         ? [...prevLikes, { user: { _id: userId, name: userName } }]
+//         : prevLikes.filter(like => like.user?._id !== userId)
+//     );
+//   }
+// };
+
+const handleLike = async () => {
+  // Store previous values
+  const prevLiked = isLiked;
+  const prevLikes = likes;
+
+  // Optimistic update
+  setIsLiked(!prevLiked);
+  setLikes(prev =>
+    !prevLiked
+      ? [...prev, { user: { _id: userId, name: userName } }]
+      : prev.filter(like => like.user?._id !== userId)
+  );
+
   try {
+    // Toggle on the server
     await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
+
+    // Get latest likes from server
     const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
     setLikes(updated.data);
+    const finalLiked = updated.data.some(like => like.user?._id === userId);
+    setIsLiked(finalLiked);
 
-    // Toggle isLiked
-    const userId = localStorage.getItem("userId");
-    const likedByUser = updated.data.some(like => like.user?._id === userId);
-    setIsLiked(likedByUser);
+    // Only show popup if the like status changed
+    if (finalLiked !== prevLiked) {
+      setPopupMessage(finalLiked ? "You liked this dataset!" : "You unliked this dataset!");
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 1500);
+    }
 
   } catch (err) {
-    console.error(err);
-    setPopupMessage("Something went wrong while liking/unliking.");
-    setShowPopup(true);
+    console.error("Error toggling like:", err);
+    // Rollback on failure
+    setIsLiked(prevLiked);
+    setLikes(prevLikes);
   }
 };
 
+
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
+
+    const tempComment = {
+      _id: Date.now(),
+      comment: newComment,
+      user: { _id: userId, name: userName },
+    };
+    setComments(prev => [tempComment, ...prev]);
+    setNewComment("");
+
     try {
-      await axiosInstance.post(
-  `/comments/${id}`,
-  { comment: newComment }, // backend expects `comment`, not `content`
-
-);
-const updated = await axiosInstance.get(`/comments/${id}`, { headers: { token } });
-
+      await axiosInstance.post(`/comments/${id}`, { comment: newComment }, { headers: { token } });
+      const updated = await axiosInstance.get(`/comments/${id}`, { headers: { token } });
       setComments(updated.data);
-      setNewComment("");
     } catch (err) {
       console.error("Error posting comment:", err.response?.data?.message || err.message);
+      setComments(prev => prev.filter(c => c._id !== tempComment._id));
     }
   };
 
@@ -108,31 +200,37 @@ const updated = await axiosInstance.get(`/comments/${id}`, { headers: { token } 
       }
     }
   };
-const handleDownloadCSV = async () => {
-  try {
-    // Log the download activity
-    await axiosInstance.post("/activity/addAccessedContent", {
-      action: "viewed",
-      datasetId: id,
-       user: localStorage.getItem("userId"),
-    });
 
-    // Trigger download
-    const link = document.createElement("a");
-    link.href = `http://localhost:3000${dataset.csvUrl}`;
-    link.setAttribute("download", "");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } catch (err) {
-    console.error("Error logging CSV download:", err);
-  }
-};
+  const handleDownloadCSV = async () => {
+    try {
+      await axiosInstance.post("/activity/addAccessedContent", {
+        action: "downloaded",
+        datasetId: id,
+        user: userId,
+      });
 
-  if (!dataset) return <div className="text-center mt-10">Loading...</div>;
+      const link = document.createElement("a");
+      link.href = `http://localhost:3000${dataset.csvUrl}`;
+      link.setAttribute("download", "");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error logging CSV download:", err);
+    }
+  };
+
+  if (loading) return <div className="text-center mt-10">Loading...</div>;
+  if (!dataset) return <div className="text-center mt-10 text-red-500">Dataset not found</div>;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {showPopup && (
+        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
+          {popupMessage}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Section */}
         <div className="md:col-span-2 bg-white p-6 rounded-lg shadow">
@@ -150,26 +248,12 @@ const handleDownloadCSV = async () => {
           <p className="text-gray-700 whitespace-pre-line">{dataset.description}</p>
 
           <div className="flex flex-wrap gap-4 mt-6">
-          <Link
-           to={`/datasets/${dataset._id}/projects`}
-            className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition"
-        >
-            View Projects
-          </Link>
-{showPopup && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-    <div className="bg-white rounded-xl shadow-lg p-6 text-center w-[300px]">
-      <p className="text-gray-800 mb-4">{popupMessage}</p>
-      <button
-        onClick={() => setShowPopup(false)}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
+            <Link
+              to={`/datasets/${dataset._id}/projects`}
+              className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition"
+            >
+              View Projects
+            </Link>
 
             {userRole === "admin" && (
               <button
@@ -183,108 +267,72 @@ const handleDownloadCSV = async () => {
 
           {/* Engagement Section */}
           <div className="mt-8">
-            <div className="flex items-center gap-4 mb-4">
-              <span className="flex items-center text-red-600 gap-1 font-semibold">
-                <FaHeart />
-                {likes.length} Likes
-              </span>
-             <span
-  onClick={() => setShowCommentList(prev => !prev)}
-  className="flex items-center text-blue-600 gap-1 font-semibold cursor-pointer"
-  title="Show/Hide Comments"
->
-  <FaCommentDots />
-  {comments.length} Comments
-</span>
+            <div className="flex items-center gap-6 mb-4">
+              {/* Likes - Always filled heart */}
+              {userRole === "user" ? (
+                <motion.button
+                  onClick={handleLike}
+                  whileTap={{ scale: 1.3 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="flex items-center gap-1 text-red-600"
+                  title="Like"
+                >
+                  <FaHeart className="text-xl" />
+                  <span className="font-semibold">{likes.length}</span>
+                </motion.button>
+              ) : (
+                <div className="flex items-center gap-1 text-red-600">
+                  <FaHeart className="text-xl" />
+                  <span className="font-semibold">{likes.length}</span>
+                </div>
+              )}
 
+              {/* Comments */}
+              <button
+                onClick={() => setShowCommentList(prev => !prev)}
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                title="Comments"
+              >
+                <FaCommentDots className="text-xl" />
+                <span className="font-semibold">{comments.length}</span>
+              </button>
             </div>
-            {/* {userRole === "user" && (
-  <div className="flex items-center gap-4">
-    <button
-      onClick={handleLike}
-      className="text-red-600 hover:text-red-700 flex items-center gap-1"
-      title="Like"
-    >
-      <FaHeart className="text-xl" />
-    </button>
-    <button
-      onClick={() => setShowCommentBox(!showCommentBox)}
-      className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
-      title="Comment"
-    >
-      <FaCommentDots className="text-xl" />
-    </button>
-  </div>
-)} */}
-{userRole === "user" && (
-  <div className="flex items-center gap-4">
-    <button
-      onClick={handleLike}
-      className={`flex items-center gap-1 ${isLiked ? "text-red-600" : "text-gray-500"} hover:text-red-700`}
-      title={isLiked ? "Unlike" : "Like"}
-    >
-      {isLiked ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl" />}
-    </button>
-    <button
-      onClick={() => setShowCommentBox(!showCommentBox)}
-      className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
-      title="Comment"
-    >
-      <FaCommentDots className="text-xl" />
-    </button>
-  </div>
-)}
 
-{showCommentBox && (
-  <div className="mt-4">
-    <textarea
-      className="w-full p-3 border border-gray-300 rounded"
-      placeholder="Write a comment..."
-      value={newComment}
-      onChange={(e) => setNewComment(e.target.value)}
-    />
-    <button
-      onClick={handleAddComment}
-      className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-    >
-      Post Comment
-    </button>
-  </div>
-)}
-{/* {userRole !== "admin" && (
-  <div className="mt-6">
-    <h3 className="font-semibold text-lg mb-2">Comments</h3>
-    {comments.map((comment) => (
-      <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
-        <p>{comment.comment}</p>
-        <p className="text-sm text-gray-600 mt-1">— {comment.user?.email}</p>
+            {userRole === "user" && showCommentList && (
+              <>
+                <div className="mt-4">
+                  <textarea
+                    className="w-full p-3 border border-gray-300 rounded"
+                    placeholder="Write a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Post Comment
+                  </button>
+                </div>
 
-      </div>
-    ))}
-  </div>
-)} */}
-
-{userRole !== "admin" && showCommentList && (
-  <div className="mt-6">
-    <h3 className="font-semibold text-lg mb-2">Comments</h3>
-    {comments.map((comment) => (
-      <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
-        <p>{comment.comment}</p>
-        <p className="text-sm text-gray-600 mt-1">— {comment.user?.name || comment.user?.email}</p>
-
-      </div>
-    ))}
-  </div>
-)}
-
-
-         
+                <div className="mt-6">
+                  <h3 className="font-semibold text-lg mb-2">Comments</h3>
+                  {comments.map((comment) => (
+                    <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
+                      <p>{comment.comment}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        — {comment.user?.name || comment.user?.email}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm self-start">
-
           <h3 className="text-lg font-semibold mb-4 border-b pb-2">Summary</h3>
 
           <div className="flex items-center gap-2 text-gray-700 mb-2">
@@ -304,29 +352,17 @@ const handleDownloadCSV = async () => {
             </div>
           )}
 
-          {/* {dataset.csvUrl ? (
-            <a
-              href={`http://localhost:3000${dataset.csvUrl}`}
-              download
+          {dataset.csvUrl ? (
+            <button
+              onClick={handleDownloadCSV}
               className="flex items-center gap-2 mt-4 text-green-600 hover:text-green-700 font-medium"
             >
               <FaDownload />
               Download CSV
-            </a>
+            </button>
           ) : (
             <p className="text-red-500 mt-4">CSV file not available</p>
-          )} */}
-{dataset.csvUrl ? (
-  <button
-    onClick={handleDownloadCSV}
-    className="flex items-center gap-2 mt-4 text-green-600 hover:text-green-700 font-medium"
-  >
-    <FaDownload />
-    Download CSV
-  </button>
-) : (
-  <p className="text-red-500 mt-4">CSV file not available</p>
-)}
+          )}
 
           {userRole === "admin" && (
             <div className="mt-6 space-y-2">

@@ -24,7 +24,7 @@ const Home = () => {
             </button> */}
             <Link
             to="/login"
-            className="text-white font-bold bg-[#0099cc] hover:bg-[#5EABD6] p-5 hover:text-black px-3 py-1 rounded-md "
+            className="text-white font-bold bg-gradient-to-r from-[#0099cc] to-[#00b4d8] shadow-lg hover:bg-[#5EABD6] p-8 hover:text-black px-6 py-2 rounded-md "
           >
            Get started
         </Link>

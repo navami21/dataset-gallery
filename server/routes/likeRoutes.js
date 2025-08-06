@@ -25,14 +25,17 @@ router.post("/:datasetId", verifyToken, isUser, async (req, res) => {
 });
 
 // GET: Get all likes for a dataset (any logged-in user)
+// GET: Get all likes for a dataset (any logged-in user)
 router.get("/:datasetId", verifyToken, async (req, res) => {
   try {
-    const likes = await Like.find({ dataset: req.params.datasetId }).populate("user", "email");
+    const likes = await Like.find({ dataset: req.params.datasetId })
+      .populate("user", "_id name email"); // ✅ now _id will be available
     res.status(200).json(likes);
   } catch (err) {
     res.status(500).json({ message: "Error fetching likes", error: err });
   }
 });
+
 
 // GET: Admin-only – all likes in system
 router.get("/", verifyToken, isAdmin, async (req, res) => {

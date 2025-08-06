@@ -78,65 +78,104 @@ router.post("/upload-users", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// Preview users from Excel file
-router.get("/recent-users", async (req, res) => {
-  try {
-    const users = await User.find({ role: "user" }) // exclude admins
-      .sort({ createdAt: -1 })                     // most recent first
-      .limit(10)                                   // limit to recent 10 users
-      .select("name email isOnline lastActive");   // select only required fields
+// routes/userHeartbeat.js (or inside your existing route file)
+// router.post("/heartbeat", verifyToken, async (req, res) => {
+//   try {
+//     await User.findByIdAndUpdate(req.user.userId, {
+//       lastActive: new Date()
+//     });
+//     res.status(200).json({ message: "Heartbeat recorded" });
+//   } catch (err) {
+//     console.error("Error updating heartbeat:", err);
+//     res.status(500).json({ message: "Failed to update heartbeat" });
+//   }
+// });
 
-    res.json(users);
+// Update lastActive for logged-in user
+router.post("/heartbeat", verifyToken, async (req, res) => {
+  try {
+    // Always ensure we get the right user ID from JWT payload
+    const userId = req.user.id || req.user.userId || req.user._id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID not found in token" });
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      lastActive: new Date()
+    });
+
+    res.status(200).json({ message: "Heartbeat recorded" });
   } catch (err) {
-    console.error("Error fetching users:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error updating heartbeat:", err);
+    res.status(500).json({ message: "Failed to update heartbeat" });
   }
 });
 
 
-
-// router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
+// Show 10 most recent users with online/offline status
+// router.get("/recent-users", verifyToken, isAdmin, async (req, res) => {
 //   try {
-//     const logs = await ActivityLog.find()
-//       .populate({
-//         path: "user",
-//         match: { role: { $ne: "admin" } }, // exclude admin activity
-//         select: "name email role"
-//       })
-//       .populate("dataset", "title")
-//       .sort({ timestamp: -1 });
+//     const users = await User.find({})
+//       .sort({ lastLogin: -1 })
+//       .limit(10)
+//       .select("name email lastLogin lastLogout lastActive");
 
-//     // remove logs where user is null (because they were admins filtered out above)
-//     const filteredLogs = logs.filter(log => log.user);
-
-//     res.json(filteredLogs);
+//     res.json(users);
 //   } catch (err) {
-//     console.error("Error fetching activity logs:", err);
-//     res.status(500).json({ message: "Internal server error" });
+//     res.status(500).json({ message: "Error fetching recent users" });
 //   }
 // });
 
 
-// router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
+// router.get("/recent-users", verifyToken, isAdmin, async (req, res) => {
 //   try {
-//     const logs = await ActivityLog.find()
-//       .populate({
-//         path: "user",
-//         match: { role: { $ne: "admin" } }, // exclude admin activity
-//         select: "name email role"
-//       })
-//       .populate("dataset", "title")
-//       .sort({ timestamp: -1 });
+//     const now = Date.now();
+//     const users = await User.find({ role: { $ne: "admin" } }) // exclude admins
+//       .sort({ lastLogin: -1 })
+//       .limit(10)
+//       .select("name email lastLogin lastLogout lastActive");
 
-//     // remove logs with null user (admins filtered out)
-//     const filteredLogs = logs.filter(log => log.user);
+//     // Mark online if lastActive within last 1 minute
+//     const updatedUsers = users.map(u => ({
+//       ...u.toObject(),
+//       isOnline: u.lastActive && (now - new Date(u.lastActive).getTime()) < 60 * 1000
+//     }));
 
-//     res.json(filteredLogs);
+//     res.json(updatedUsers);
 //   } catch (err) {
-//     console.error("Error fetching activity logs:", err);
-//     res.status(500).json({ message: "Internal server error" });
+//     res.status(500).json({ message: "Error fetching recent users" });
 //   }
 // });
+
+router.get("/recent-users", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const now = Date.now();
+    const users = await User.find({ role: { $ne: "admin" } }) // exclude admins
+      .sort({ lastLogin: -1 })
+      .limit(10)
+      .select("name email lastLogin lastLogout lastActive");
+
+    const updatedUsers = users.map(u => {
+      const hasRecentHeartbeat =
+        u.lastActive && (now - new Date(u.lastActive).getTime()) < 60 * 1000;
+
+      const notLoggedOut =
+        !u.lastLogout || new Date(u.lastLogout) <= new Date(u.lastLogin);
+
+      return {
+        ...u.toObject(),
+        isOnline: hasRecentHeartbeat && notLoggedOut
+      };
+    });
+
+    res.json(updatedUsers);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching recent users" });
+  }
+});
+
+
 
 router.get("/all-user-activity", verifyToken, isAdmin, async (req, res) => {
   try {
