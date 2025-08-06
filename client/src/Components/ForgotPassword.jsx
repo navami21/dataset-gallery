@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "../axiosinterceptor"; // adjust if needed
+import axios from "../axiosinterceptor";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +17,7 @@ const ForgotPassword = () => {
       const res = await axios.post("/users/forgot-password", { email });
       toast.success(res.data.message || "Reset link sent to your email");
       setEmailSent(true);
-    //   navigate("/login");
+    
     } catch (err) {
       toast.error(err.response?.data?.message || "Something went wrong");
       setEmailSent(false);

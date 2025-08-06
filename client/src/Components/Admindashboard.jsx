@@ -58,12 +58,12 @@ const AdminDashboard = () => {
     fetchCategoryCount();
     fetchDatasetCount();
     fetchRecentUsers();
-    sendHeartbeat(); // initial heartbeat
+    sendHeartbeat(); 
 
-    // Poll recent users every 3 sec for faster updates
+   
     const usersInterval = setInterval(fetchRecentUsers, 3000);
 
-    // Send heartbeat every 1 min
+   
     const heartbeatInterval = setInterval(sendHeartbeat, 60000);
 
     return () => {

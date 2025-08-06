@@ -54,6 +54,7 @@ const ViewCategories = () => {
                 alt={cat.name}
                 className="w-full h-44 object-cover"
               />
+              {userRole === "admin" && (
               <div className="absolute top-2 right-2 flex gap-2">
                 <button
                   onClick={() => navigate(`/admin/category/edit/${cat._id}`)}
@@ -70,6 +71,7 @@ const ViewCategories = () => {
                   <Trash2 size={16} className="text-red-500" />
                 </button>
               </div>
+              )}
             </div>
 
             {/* Details */}

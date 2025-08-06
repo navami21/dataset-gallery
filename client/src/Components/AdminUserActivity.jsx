@@ -71,7 +71,7 @@ const AdminAllUserActivity = () => {
     <div className="p-4 overflow-x-auto">
       <h2 className="text-xl font-semibold mb-4">User Activity Overview</h2>
 
-      {/* Filters */}
+      
       <div className="flex flex-wrap gap-4 mb-4 items-center">
         <div className="relative">
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />

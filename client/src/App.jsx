@@ -32,9 +32,11 @@ import AdminUserActivity from "./Components/AdminUserActivity";
 import AdminMessages from "./Components/AdminMessages";
 import UserNotifications from "./Components/UserNotifications";
 
+
 const App = () => {
   return (
     <>
+      
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Main child={<Home />} />} />
@@ -79,7 +81,8 @@ const App = () => {
 
         <Route element={<PrivateRoute allowedRoles={['user', 'admin']} />}>
         <Route path="/projects/:id" element={<Main child={<ProjectDetails />} />} />
-        <Route path="/projects/datasets/:id" element={<ProjectDetails />} />
+        {/* <Route path="/projects/datasets/:id" element={<ProjectDetails />} /> */}
+        <Route path="/projects/datasets/:id" element={<Main child={<ProjectDetails />} />} />
        <Route path="/datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
        <Route path="/change-password" element={<Main child={<ChangePassword />} />} />
         <Route path="/category/:categoryId/datasets" element={<Main child={<CategoryDatasets />} />} />
@@ -92,6 +95,8 @@ const App = () => {
         <Route path="/viewdsa" element={<Main child={<ViewDSA />} />} />
         <Route path="/datasetdetails" element={<Main child={<DatasetDetails />} />} />
           <Route path="/notifications" element={<Main child={<UserNotifications />} />} />
+           <Route path="/category/all" element={<Main child={<ViewCategories />} />} />
+
 
         {/* <Route path="/category/:id" element={<Main child={<DatasetView />} />} /> */}
         {/* <Route path="/category/:categoryId/datasets" element={<CategoryDatasets />} /> */}

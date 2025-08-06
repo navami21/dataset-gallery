@@ -18,16 +18,16 @@ import { Link, useLocation } from "react-router-dom";
 import { FaBriefcase } from "react-icons/fa";
 
 const navItems = [
-  { label: "Dashboard", icon: <LayoutDashboard size={30} />, to: "/admin/dashboard" },
-  { label: "Category", icon: <Folder size={30} />, to: "/admin/category" },
-  { label: "Add Category", icon: <FolderPlus size={30} />, to: "/admin/category/add" },
-  { label: "Data Sets", icon: <Sheet size={30} />, to: "/admin/datasets" },
-  { label: "Add Data Set", icon: <PackagePlus size={30} />, to: "/admin/datasets/add" },
-  { label: "All Projects", icon: <FaBriefcase size={30} />, to: "/admin/projects" },
-  { label: "Add Project", icon: <FilePlus size={30} />, to: "/admin/projects/add" },
-  { label: "Add User", icon: <UserPlus size={30} />, to: "/admin/users/add" },
+  { label: "Dashboard", icon: <LayoutDashboard size={20} />, to: "/admin/dashboard" },
+  { label: "Category", icon: <Folder size={20} />, to: "/admin/category" },
+  { label: "Add Category", icon: <FolderPlus size={20} />, to: "/admin/category/add" },
+  { label: "Data Sets", icon: <Sheet size={20} />, to: "/admin/datasets" },
+  { label: "Add Data Set", icon: <PackagePlus size={20} />, to: "/admin/datasets/add" },
+  { label: "All Projects", icon: <FaBriefcase size={20} />, to: "/admin/projects" },
+  { label: "Add Project", icon: <FilePlus size={20} />, to: "/admin/projects/add" },
+  { label: "Add User", icon: <UserPlus size={20} />, to: "/admin/users/add" },
   { label: "User Messages", icon: <MessageSquare />, to: "/admin/messages" },
-  { label: "Activity Logs", icon: <FileBarChart size={30} />, to: "/admin/user-activity" },
+  { label: "Activity Logs", icon: <FileBarChart size={20} />, to: "/admin/user-activity" },
 ];
 
 const Sidebar = () => {
@@ -82,7 +82,7 @@ const Sidebar = () => {
                 </span>
                 {isOpen && (
                   <span
-                    className={`text-lg font-medium ${
+                    className={`text-sm font-medium ${
                       isActive ? "text-white" : "text-gray-700 group-hover:text-[#0099cc]"
                     }`}
                   >
