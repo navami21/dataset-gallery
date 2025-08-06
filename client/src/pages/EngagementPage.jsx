@@ -1,10 +1,11 @@
-// import React, { useEffect, useState } from "react";
+
+
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 import { useEffect, useState } from "react";
 
 const EngagementPage = () => {
-  const { type, id } = useParams(); // type: "dataset" or "project"
+  const { type, id } = useParams();
   const navigate = useNavigate();
   const [likes, setLikes] = useState([]);
   const [comments, setComments] = useState([]);
@@ -15,20 +16,20 @@ const EngagementPage = () => {
         const [likeRes, commentRes] = await Promise.all([
           axiosInstance.get(
             type === "dataset"
-              ? `/admin/like/${id}`
-              : `/admin/like/project/${id}`
+              ? `/likes/${type}/${id}` 
+              : `/likes/${type}/${id}` 
           ),
           axiosInstance.get(
             type === "dataset"
-              ? `/admin/comment/${id}`
-              : `/admin/comment/project/${id}`
+              ? `/comments/${id}`
+              : `/comments/project/${id}`
           ),
         ]);
 
+        // Ensure arrays even if undefined
         setLikes(likeRes.data.likedBy || []);
-        setComments(commentRes.data.comments || []);
+        setComments(commentRes.data.comments || commentRes.data || []);
 
-        console.log("TYPE:", type, "ID:", id);
       } catch (error) {
         console.error("Error fetching engagement data:", error);
       }
@@ -56,10 +57,16 @@ const EngagementPage = () => {
           👍 Likes ({likes.length})
         </h2>
         {likes.length ? (
-          <ul className="list-disc list-inside">
+          <ul className="space-y-2">
             {likes.map((like, i) => (
-              <li key={i}>
-                {like.user?.name ?? "Unknown"} ({like.user?.email ?? "N/A"})
+              <li key={i} className="border p-3 rounded bg-gray-50">
+                <p className="font-medium">
+                  {like.name ?? like.user?.name ?? "Unknown"} (
+                  {like.email ?? like.user?.email ?? "N/A"})
+                </p>
+                <p className="text-sm text-gray-500">
+                  🕒 {like.createdAt ? new Date(like.createdAt).toLocaleString() : "No timestamp"}
+                </p>
               </li>
             ))}
           </ul>
@@ -81,7 +88,7 @@ const EngagementPage = () => {
                 <p className="text-sm text-gray-500 mt-1">
                   — {comment.user?.name ?? "Unknown"} (
                   {comment.user?.email ?? "N/A"}) <br />
-                  🕒 {new Date(comment.createdAt).toLocaleString()}
+                  🕒 {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : "No timestamp"}
                 </p>
               </li>
             ))}

@@ -48,7 +48,7 @@ router.post(
         const headers = await new Promise((resolve, reject) => {
           parser.on("headers", (headers) => {
             resolve(headers);
-            parser.destroy(); // stop reading after first row
+            parser.destroy(); 
           });
           parser.on("error", reject);
         });

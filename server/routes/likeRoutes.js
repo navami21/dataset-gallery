@@ -1,50 +1,129 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Like = require("../model/likeData");
-const { verifyToken, isUser, isAdmin } = require("../middleware/authMiddleware");
+const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 
-// POST: Like a dataset (user only)
-router.post("/:datasetId", verifyToken, isUser, async (req, res) => {
+
+//  Toggle like for dataset
+router.post("/dataset/:datasetId", verifyToken, async (req, res) => {
   const { datasetId } = req.params;
-  const userId = req.user.id;
-
-  try {
-    // Check if already liked
-    const existing = await Like.findOne({ user: userId, dataset: datasetId });
-    if (existing) {
-      await Like.findByIdAndDelete(existing._id);
-      return res.status(200).json({ message: "Unliked successfully" });
-    }
-
-    // If not liked, create new like
-    const like = await Like.create({ user: userId, dataset: datasetId });
-    res.status(201).json({ message: "Liked successfully", like });
-  } catch (err) {
-    res.status(500).json({ message: "Error toggling like", error: err });
+  if (!mongoose.Types.ObjectId.isValid(datasetId)) {
+    return res.status(400).json({ message: "Invalid dataset ID" });
   }
+
+  const existingLike = await Like.findOne({ user: req.user.userId, dataset: datasetId });
+
+  if (existingLike) {
+    await Like.findByIdAndDelete(existingLike._id);
+  } else {
+    await Like.create({ user: req.user.userId, dataset: datasetId });
+  }
+
+  // Always return updated like count & status
+  const totalLikes = await Like.countDocuments({ dataset: datasetId });
+  const userLiked = await Like.exists({ user: req.user.userId, dataset: datasetId });
+
+  res.json({
+    message: existingLike ? "Dataset unliked" : "Dataset liked",
+    liked: !!userLiked,
+    totalLikes
+  });
 });
 
-// GET: Get all likes for a dataset (any logged-in user)
-// GET: Get all likes for a dataset (any logged-in user)
-router.get("/:datasetId", verifyToken, async (req, res) => {
-  try {
-    const likes = await Like.find({ dataset: req.params.datasetId })
-      .populate("user", "_id name email"); // ✅ now _id will be available
-    res.status(200).json(likes);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching likes", error: err });
+// Get dataset like status + count (works for all authenticated users)
+router.get("/dataset/:datasetId/status", verifyToken, async (req, res) => {
+  const { datasetId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(datasetId)) {
+    return res.status(400).json({ message: "Invalid dataset ID" });
   }
+
+  const totalLikes = await Like.countDocuments({ dataset: datasetId });
+  const userLiked = await Like.exists({ user: req.user.userId, dataset: datasetId });
+
+  res.json({
+    liked: !!userLiked,
+    totalLikes
+  });
 });
 
-
-// GET: Admin-only – all likes in system
-router.get("/", verifyToken, isAdmin, async (req, res) => {
-  try {
-    const allLikes = await Like.find().populate("user dataset");
-    res.status(200).json(allLikes);
-  } catch (err) {
-    res.status(500).json({ message: "Error fetching all likes", error: err });
+// Get all dataset likes with user info (Admin only)
+router.get("/dataset/:datasetId", verifyToken, isAdmin, async (req, res) => {
+  const { datasetId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(datasetId)) {
+    return res.status(400).json({ message: "Invalid dataset ID" });
   }
+
+  const likes = await Like.find({ dataset: datasetId }).populate("user", "name email");
+  res.json({
+    totalLikes: likes.length,
+    likedBy: likes.map(l => ({
+      name: l.user?.name || "Unknown",
+      email: l.user?.email || "unknown@example.com",
+      createdAt: l.createdAt
+    }))
+  });
+});
+
+//Project Likes
+// Toggle like for project
+router.post("/project/:projectId", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    return res.status(400).json({ message: "Invalid project ID" });
+  }
+
+  const existingLike = await Like.findOne({ user: req.user.userId, project: projectId });
+
+  if (existingLike) {
+    await Like.findByIdAndDelete(existingLike._id);
+  } else {
+    await Like.create({ user: req.user.userId, project: projectId });
+  }
+
+  // return updated like count & status
+  const totalLikes = await Like.countDocuments({ project: projectId });
+  const userLiked = await Like.exists({ user: req.user.userId, project: projectId });
+
+  res.json({
+    message: existingLike ? "Project unliked" : "Project liked",
+    liked: !!userLiked,
+    totalLikes
+  });
+});
+
+//  Get all project likes with user info (Admin only)
+router.get("/project/:projectId", verifyToken, isAdmin, async (req, res) => {
+  const { projectId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    return res.status(400).json({ message: "Invalid project ID" });
+  }
+
+  const likes = await Like.find({ project: projectId }).populate("user", "name email");
+  res.json({
+    totalLikes: likes.length,
+    likedBy: likes.map(l => ({
+      name: l.user?.name || "Unknown",
+      email: l.user?.email || "unknown@example.com",
+      createdAt: l.createdAt
+    }))
+  });
+});
+
+// ✅ Get project like status + count (works for all authenticated users)
+router.get("/project/:projectId/status", verifyToken, async (req, res) => {
+  const { projectId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    return res.status(400).json({ message: "Invalid project ID" });
+  }
+
+  const totalLikes = await Like.countDocuments({ project: projectId });
+  const userLiked = await Like.exists({ user: req.user.userId, project: projectId });
+
+  res.json({
+    liked: !!userLiked,
+    totalLikes
+  });
 });
 
 module.exports = router;

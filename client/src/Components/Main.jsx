@@ -1,13 +1,14 @@
-import React from 'react'
-import Navbar from './Navbar'
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
-const Main = ({child}) => {
+const Main = ({ child }) => {
   return (
-    <div>
-        <Navbar/>
-        {child}
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-grow">{child}</main>
+      <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default Main
+export default Main;

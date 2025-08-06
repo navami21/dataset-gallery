@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 import { motion } from "framer-motion";
@@ -33,21 +32,26 @@ const DatasetDetails = () => {
   const userId = localStorage.getItem("userId");
   const userName = localStorage.getItem("name") || localStorage.getItem("email");
 
-  // Fetch dataset + likes + comments
+  // Fetch dataset, likes, comments
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [datasetRes, likeRes, commentRes] = await Promise.all([
-          axiosInstance.get(`/datasets/${id}`, { headers: { token } }),
-          axiosInstance.get(`/likes/${id}`, { headers: { token } }),
-          axiosInstance.get(`/comments/${id}`, { headers: { token } }),
-        ]);
-
+        const datasetRes = await axiosInstance.get(`/datasets/${id}`, { headers: { token } });
         setDataset(datasetRes.data);
-        setLikes(likeRes.data);
+
+        const role = localStorage.getItem("role");
+        setUserRole(role);
+
+        // Get like status + total likes
+        const likeStatusRes = await axiosInstance.get(`/likes/dataset/${id}/status`, {
+          headers: { token },
+        });
+        setIsLiked(likeStatusRes.data.liked);
+        setLikes(Array(likeStatusRes.data.totalLikes).fill({}));
+
+        // Get comments
+        const commentRes = await axiosInstance.get(`/comments/${id}`, { headers: { token } });
         setComments(commentRes.data);
-        setUserRole(localStorage.getItem("role"));
-        setIsLiked(likeRes.data.some(like => like.user?._id === userId));
 
         // Track activity
         await axiosInstance.post("/activity/addAccessedContent", {
@@ -61,113 +65,31 @@ const DatasetDetails = () => {
       }
     };
     fetchData();
-  }, [id, token, userId]);
+  }, [id, token]);
 
-  // const handleLike = async () => {
-  //   const newLikeState = !isLiked;
+  const handleLike = async () => {
+    const prevLiked = isLiked;
+    const prevLikes = likes.length;
 
-  //   // Optimistic update
-  //   setIsLiked(newLikeState);
-  //   setLikes(prevLikes =>
-  //     newLikeState
-  //       ? [...prevLikes, { user: { _id: userId, name: userName } }]
-  //       : prevLikes.filter(like => like.user?._id !== userId)
-  //   );
+    setIsLiked(!prevLiked);
+    setLikes(prev => (!prevLiked ? [...prev, {}] : prev.slice(0, -1)));
 
-  //   // Show popup only if liking
-  //   if (newLikeState) {
-  //     setPopupMessage("You liked this dataset!");
-  //     setShowPopup(true);
-  //     setTimeout(() => setShowPopup(false), 1500); // auto-close
-  //   }
+    try {
+      const res = await axiosInstance.post(`/likes/dataset/${id}`, {}, { headers: { token } });
+      setIsLiked(res.data.liked);
+      setLikes(Array(res.data.totalLikes).fill({}));
 
-  //   try {
-  //     await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
-  //     const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
-  //     setLikes(updated.data);
-  //     setIsLiked(updated.data.some(like => like.user?._id === userId));
-  //   } catch (err) {
-  //     console.error(err);
-  //     // rollback
-  //     setIsLiked(!newLikeState);
-  //     setLikes(prevLikes =>
-  //       !newLikeState
-  //         ? [...prevLikes, { user: { _id: userId, name: userName } }]
-  //         : prevLikes.filter(like => like.user?._id !== userId)
-  //     );
-  //   }
-  // };
-// const handleLike = async () => {
-//   const newLikeState = !isLiked;
-
-//   // Optimistic update
-//   setIsLiked(newLikeState);
-//   setLikes(prevLikes =>
-//     newLikeState
-//       ? [...prevLikes, { user: { _id: userId, name: userName } }]
-//       : prevLikes.filter(like => like.user?._id !== userId)
-//   );
-
-//   // Show popup message for like/unlike
-//   setPopupMessage(newLikeState ? "You liked this dataset!" : "You unliked this dataset!");
-//   setShowPopup(true);
-//   setTimeout(() => setShowPopup(false), 1500);
-
-//   try {
-//     await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
-//     const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
-//     setLikes(updated.data);
-//     setIsLiked(updated.data.some(like => like.user?._id === userId));
-//   } catch (err) {
-//     console.error(err);
-//     // rollback if error
-//     setIsLiked(!newLikeState);
-//     setLikes(prevLikes =>
-//       !newLikeState
-//         ? [...prevLikes, { user: { _id: userId, name: userName } }]
-//         : prevLikes.filter(like => like.user?._id !== userId)
-//     );
-//   }
-// };
-
-const handleLike = async () => {
-  // Store previous values
-  const prevLiked = isLiked;
-  const prevLikes = likes;
-
-  // Optimistic update
-  setIsLiked(!prevLiked);
-  setLikes(prev =>
-    !prevLiked
-      ? [...prev, { user: { _id: userId, name: userName } }]
-      : prev.filter(like => like.user?._id !== userId)
-  );
-
-  try {
-    // Toggle on the server
-    await axiosInstance.post(`/likes/${id}`, {}, { headers: { token } });
-
-    // Get latest likes from server
-    const updated = await axiosInstance.get(`/likes/${id}`, { headers: { token } });
-    setLikes(updated.data);
-    const finalLiked = updated.data.some(like => like.user?._id === userId);
-    setIsLiked(finalLiked);
-
-    // Only show popup if the like status changed
-    if (finalLiked !== prevLiked) {
-      setPopupMessage(finalLiked ? "You liked this dataset!" : "You unliked this dataset!");
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 1500);
+      if (res.data.liked !== prevLiked) {
+        setPopupMessage(res.data.liked ? "You liked this dataset!" : "You unliked this dataset!");
+        setShowPopup(true);
+        setTimeout(() => setShowPopup(false), 1500);
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
+      setIsLiked(prevLiked);
+      setLikes(Array(prevLikes).fill({}));
     }
-
-  } catch (err) {
-    console.error("Error toggling like:", err);
-    // Rollback on failure
-    setIsLiked(prevLiked);
-    setLikes(prevLikes);
-  }
-};
-
+  };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -268,16 +190,27 @@ const handleLike = async () => {
           {/* Engagement Section */}
           <div className="mt-8">
             <div className="flex items-center gap-6 mb-4">
-              {/* Likes - Always filled heart */}
+              {/* Likes */}
               {userRole === "user" ? (
                 <motion.button
                   onClick={handleLike}
                   whileTap={{ scale: 1.3 }}
                   transition={{ type: "spring", stiffness: 300 }}
-                  className="flex items-center gap-1 text-red-600"
+                  className={`flex items-center gap-1 ${isLiked ? "text-red-600" : "text-black-500"}`}
                   title="Like"
                 >
-                  <FaHeart className="text-xl" />
+                  {isLiked ? (
+                    <FaHeart className="text-xl" />
+                  ) : (
+                    <FaHeart
+                      className="text-xl"
+                      style={{
+                        fill: "none",
+                        stroke: "currentColor",
+                        strokeWidth: 9,
+                      }}
+                    />
+                  )}
                   <span className="font-semibold">{likes.length}</span>
                 </motion.button>
               ) : (
@@ -298,36 +231,42 @@ const handleLike = async () => {
               </button>
             </div>
 
-            {userRole === "user" && showCommentList && (
-              <>
-                <div className="mt-4">
-                  <textarea
-                    className="w-full p-3 border border-gray-300 rounded"
-                    placeholder="Write a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                  />
-                  <button
-                    onClick={handleAddComment}
-                    className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Post Comment
-                  </button>
-                </div>
+            {showCommentList && (
+  <>
+    {userRole === "user" && (
+      <div className="mt-4">
+        <textarea
+          className="w-full p-3 border border-gray-300 rounded"
+          placeholder="Write a comment..."
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+        />
+        <button
+          onClick={handleAddComment}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Post Comment
+        </button>
+      </div>
+    )}
 
-                <div className="mt-6">
-                  <h3 className="font-semibold text-lg mb-2">Comments</h3>
-                  {comments.map((comment) => (
-                    <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
-                      <p>{comment.comment}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        — {comment.user?.name || comment.user?.email}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+    <div className="mt-6">
+      <h3 className="font-semibold text-lg mb-2">Comments</h3>
+
+      <div className="max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+        {comments.map((comment) => (
+          <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
+            <p>{comment.comment}</p>
+            <p className="text-sm text-gray-600 mt-1">
+              — {comment.user?.name || comment.user?.email}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </>
+)}
+
           </div>
         </div>
 

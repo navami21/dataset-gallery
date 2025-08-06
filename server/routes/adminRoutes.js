@@ -4,14 +4,14 @@ const multer = require("multer");
 const xlsx = require("xlsx");
 const bcrypt = require("bcryptjs");
 const User = require("../model/userData");
-const { sendPasswordEmail } = require("../utils/emailSender"); // custom function
+const { sendPasswordEmail } = require("../utils/emailSender"); 
 const router = express.Router();
 const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
-// const { verify } = require("jsonwebtoken");
 const Like=require("../model/likeData");
 const Comment=require("../model/commentData");
 const ActivityLog = require("../model/activitylogData");
 const mongoose = require("mongoose"); 
+
 
 // Configure multer
 const storage = multer.memoryStorage();
@@ -57,7 +57,7 @@ router.post("/upload-users", verifyToken, isAdmin, async (req, res) => {
         success.push(email);
 
       } catch (err) {
-        console.error("❌ Failed for ${email}:", err.message);
+        console.error("Failed for ${email}:", err.message);
         failed.push(email);
       }
     }
@@ -78,18 +78,6 @@ router.post("/upload-users", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// routes/userHeartbeat.js (or inside your existing route file)
-// router.post("/heartbeat", verifyToken, async (req, res) => {
-//   try {
-//     await User.findByIdAndUpdate(req.user.userId, {
-//       lastActive: new Date()
-//     });
-//     res.status(200).json({ message: "Heartbeat recorded" });
-//   } catch (err) {
-//     console.error("Error updating heartbeat:", err);
-//     res.status(500).json({ message: "Failed to update heartbeat" });
-//   }
-// });
 
 // Update lastActive for logged-in user
 router.post("/heartbeat", verifyToken, async (req, res) => {
@@ -112,41 +100,6 @@ router.post("/heartbeat", verifyToken, async (req, res) => {
   }
 });
 
-
-// Show 10 most recent users with online/offline status
-// router.get("/recent-users", verifyToken, isAdmin, async (req, res) => {
-//   try {
-//     const users = await User.find({})
-//       .sort({ lastLogin: -1 })
-//       .limit(10)
-//       .select("name email lastLogin lastLogout lastActive");
-
-//     res.json(users);
-//   } catch (err) {
-//     res.status(500).json({ message: "Error fetching recent users" });
-//   }
-// });
-
-
-// router.get("/recent-users", verifyToken, isAdmin, async (req, res) => {
-//   try {
-//     const now = Date.now();
-//     const users = await User.find({ role: { $ne: "admin" } }) // exclude admins
-//       .sort({ lastLogin: -1 })
-//       .limit(10)
-//       .select("name email lastLogin lastLogout lastActive");
-
-//     // Mark online if lastActive within last 1 minute
-//     const updatedUsers = users.map(u => ({
-//       ...u.toObject(),
-//       isOnline: u.lastActive && (now - new Date(u.lastActive).getTime()) < 60 * 1000
-//     }));
-
-//     res.json(updatedUsers);
-//   } catch (err) {
-//     res.status(500).json({ message: "Error fetching recent users" });
-//   }
-// });
 
 router.get("/recent-users", verifyToken, isAdmin, async (req, res) => {
   try {
@@ -260,16 +213,16 @@ router.get("/user-activity/:userId", verifyToken, isAdmin, async (req, res) => {
       }
     });
 
-    // ✅ Push active session without logout
+    //  Push active session without logout
     if (currentSession) {
-      currentSession.logoutTime = null; // still active
+      currentSession.logoutTime = null;
       currentSession.durationMinutes = Math.round(
         (Date.now() - currentSession.loginTime) / 60000
       );
       sessions.push(currentSession);
     }
 
-    // ✅ Also return all raw actions for quick view
+    //  return all raw actions for quick view
     const allActions = logs.map(l => ({
       action: l.action,
       dataset: l.dataset ? l.dataset.title : null,
@@ -312,7 +265,7 @@ const getLoginSessionsWithDuration = async (req, res) => {
       .populate("user", "name email")
       .sort({ timestamp: 1 });
 
-    const userSessions = {}; // to track sessions by user
+    const userSessions = {}; 
 
     logs.forEach(log => {
       const userId = log.user._id.toString();
@@ -354,53 +307,8 @@ const getLoginSessionsWithDuration = async (req, res) => {
   }
 };
 
-router.get("/comment/:datasetId", verifyToken, isAdmin, async (req, res) => {
-  console.log("Querying for dataset ObjectId:", req.params.datasetId);
-
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.datasetId)) {
-      return res.status(400).json({ message: "Invalid dataset ID" });
-    }
-
-    const datasetId = new mongoose.Types.ObjectId(req.params.datasetId);
-    
-    const comments = await Comment.find({ dataset: datasetId })
-      .populate("user", "name email")
-      .sort({ createdAt: -1 });
-
-    res.json({
-      totalComments: comments.length,
-      comments: comments.map((c) => ({
-        user: c.user,
-        comment: c.comment, // 🔧 corrected
-        createdAt: c.createdAt,
-      })),
-    });
-  } catch (err) {
-    console.error("Error in /comment/:datasetId:", err);
-    res.status(500).json({ message: "Error fetching comments", error: err.message });
-  }
-});
 
 
-
-
-
-router.get("/project/:projectId/stats", verifyToken, async (req, res) => {
-  const { projectId } = req.params;
-
-  try {
-    const likeCount = await Like.countDocuments({ project: projectId });
-    const commentCount = await Comment.countDocuments({ project: projectId });
-
-    res.status(200).json({
-      likes: likeCount,
-      comments: commentCount,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch project stats", error: err.message });
-  }
-});
 
 // Get activity logs for a specific user (admin only)
 router.get("/user/:userId", verifyToken, async (req, res) => {
@@ -541,7 +449,6 @@ router.put("/contact-messages/:id/reply", verifyToken, isAdmin, async (req, res)
     message.reply = reply;
     await message.save();
 
-    // If userId is present, show in-app notification (frontend handles this)
     if (!message.userId) {
       await sendReplyEmail(message.email, message.name, reply);
     }

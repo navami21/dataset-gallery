@@ -152,7 +152,8 @@ router.put("/change-password", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Failed to change password", error: err.message });
   }
 });
-// 🔐 Step 1: Forgot password - send email with reset link
+
+//Forgot password - send email with reset link
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
@@ -173,7 +174,7 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-// 🔐 Step 2: Reset password using token from email
+//Reset password using token from email
 router.post("/reset-password/:token", async (req, res) => {
   const { token } = req.params;
   const { newPassword, confirmPassword } = req.body;

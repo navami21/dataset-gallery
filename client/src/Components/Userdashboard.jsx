@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../axiosinterceptor";
 import { Link } from "react-router-dom";
@@ -94,10 +92,15 @@ const UserDashboard = () => {
                 className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group"
               >
                 <img
-                  src={category.imageUrl || "/assets/default.png"}
-                  alt={category.name}
-                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+  src={
+    category.imageUrl
+      ? `http://localhost:3000${category.imageUrl}`
+      : "/assets/default.png"
+  }
+  alt={category.name}
+  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+/>
+
                 <div className="p-5 flex flex-col flex-grow">
                   <h3 className="text-lg font-semibold text-gray-800">
                     {category.name}

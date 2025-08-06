@@ -11,7 +11,7 @@ const Comment = require("../model/commentData");
 const AlumniProject = require("../model/projectData");
 const { isAdmin, verifyToken } = require("../middleware/authMiddleware");
 
-// ---------------- Multer Setup ----------------
+// Multer Setup 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/alumni/");
@@ -40,8 +40,7 @@ const multipleUpload = upload.fields([
   { name: "report", maxCount: 1 },
 ]);
 
-// ---------------- Routes ----------------
-// ✅ Get all projects
+// Get all projects
 router.get("/", verifyToken, async (req, res) => {
   try {
     const projects = await AlumniProject.find().populate("dataset");
@@ -52,7 +51,7 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Get all projects for a dataset
+// Get all projects for a dataset
 router.get("/dataset/:datasetId", verifyToken, async (req, res) => {
   const { datasetId } = req.params;
 
@@ -108,7 +107,7 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Add project
+//  Add project
 router.post("/add", verifyToken, isAdmin, multipleUpload, async (req, res) => {
   try {
     const { dataset, title, description, link, category } = req.body;
@@ -155,7 +154,7 @@ router.put("/:id", verifyToken, isAdmin, multipleUpload, async (req, res) => {
   }
 });
 
-// ✅ Delete project
+//  Delete project
 router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   try {
     const project = await AlumniProject.findById(req.params.id);
@@ -180,31 +179,7 @@ router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// ✅ Like project
-// router.post("/:id/like", verifyToken, async (req, res) => {
-//   try {
-//     const existingLike = await Like.findOne({
-//       user: req.user.userId,
-//       project: req.params.id,
-//     });
-
-//     if (existingLike) {
-//       return res.status(400).json({ message: "You already liked this project" });
-//     }
-
-//     const like = new Like({
-//       user: req.user.userId,
-//       project: req.params.id,
-//     });
-
-//     await like.save();
-//     res.status(201).json({ message: "Project liked successfully" });
-//   } catch (error) {
-//     console.error("Error liking project:", error);
-//     res.status(500).json({ message: "Error liking project", error: error.message });
-//   }
-// });
-// ✅ Toggle Like/Unlike project
+// Toggle like for project
 router.post("/:id/like", verifyToken, async (req, res) => {
   try {
     const existingLike = await Like.findOne({
@@ -232,7 +207,7 @@ router.post("/:id/like", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Comment on project
+//  Comment on project
 router.post("/:id/comment", verifyToken, async (req, res) => {
   const { comment } = req.body;
   if (!comment?.trim()) {

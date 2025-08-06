@@ -1,5 +1,3 @@
-
-
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FiMenu, FiX } from "react-icons/fi";
 import { LogOut, UserRound, ChevronDown } from "lucide-react";
@@ -50,7 +48,7 @@ const Navbar = () => {
       if (location.pathname === "/notifications" && isLoggedIn && role === "user") {
         try {
           await axiosInstance.put("/contact/mark-read");
-          setNotificationCount(0); // instantly update UI
+          setNotificationCount(0); 
         } catch (err) {
           console.error("Error marking notifications as read:", err);
         }
@@ -119,9 +117,9 @@ const Navbar = () => {
                  hover:bg-gradient-to-r from-[#0099cc] to-[#00b4d8] hover:text-white 
                  transition-colors duration-300 ease-in-out hover:scale-105"
     >
-      <UserRound size={16} /> {/* smaller icon */}
+      <UserRound size={16} /> 
       <span className="text-sm md:text-base font-medium">Profile</span> {/* smaller text */}
-      <ChevronDown size={16} /> {/* smaller icon */}
+      <ChevronDown size={16} /> 
     </button>
     {showProfile && (
       <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border rounded-lg py-2 z-10">
@@ -155,7 +153,7 @@ const Navbar = () => {
         <div className="flex items-center gap-2">
           <img src="/assets/LOGO.png" alt="logo" className="h-10" />
           <h1 className="text-sm font-semibold text-gray-800">
-            ICTAK-Dataset Gallery
+            ICTAK LearnSphere
           </h1>
         </div>
 

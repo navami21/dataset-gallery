@@ -5,28 +5,11 @@ const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload"); 
 
 // Add Category
-// router.post("/add", verifyToken, isAdmin, async (req, res) => {
-//   try {
-//     const { name, description, imageUrl } = req.body;
-
-//     const existing = await Category.findOne({ name });
-//     if (existing) {
-//       return res.status(400).json({ message: "Category already exists" });
-//     }
-
-//     const newCategory = new Category({ name, description, imageUrl });
-//     await newCategory.save();
-
-//     res.status(201).json({ message: "Category added successfully", category: newCategory });
-//   } catch (err) {
-//     res.status(500).json({ message: "Error adding category", error: err.message });
-//   }
-// });
 router.post(
   "/add",
   verifyToken,
   isAdmin,
-  upload.single("image"), // multer middleware
+  upload.single("image"), isAdmin,verifyToken,
   async (req, res) => {
     try {
       const { name, description } = req.body;
@@ -56,23 +39,8 @@ router.get("/all",verifyToken, async (req, res) => {
     res.status(500).json({ message: "Error fetching categories", error: err.message });
   }
 });
-// edit category
-// router.put("/edit/:id", verifyToken, isAdmin, async (req, res) => {
-//     try {
-//       const { name, description, imageUrl } = req.body;
-//       const updated = await Category.findByIdAndUpdate(
-//         req.params.id,
-//         { name, description, imageUrl },
-//         { new: true }
-//       );
-//       if (!updated) return res.status(404).json({ message: "Category not found" });
-  
-//       res.status(200).json({ message: "Category updated", category: updated });
-//     } catch (err) {
-//       res.status(500).json({ message: "Update failed", error: err.message });
-//     }
-//   });
-router.put("/edit/:id", upload.single("image"), async (req, res) => {
+// Edit Category
+router.put("/edit/:id", upload.single("image"),isAdmin,verifyToken, async (req, res) => {
   try {
     const { name } = req.body;
     const id = req.params.id;
