@@ -64,6 +64,7 @@ const App = () => {
           <Route path="datasets/add" element={<DatasetForm />} />
           <Route path="datasets/edit/:datasetId" element={<DatasetForm />} />
           <Route path="datasets/:id" element={<DatasetDetails />} />
+          {/* <Route path="datasets/:id" element={<Main child={<DatasetDetails />} />}/> */}
           <Route path="projects" element={<AlumniProjectsList />} />
           <Route path="projects/add" element={<AddProjectForm />} />
           <Route path="datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
@@ -86,7 +87,8 @@ const App = () => {
        <Route path="/datasets/:datasetId/projects" element={<Main child={<ProjectsByDataset />} />} />
        <Route path="/change-password" element={<Main child={<ChangePassword />} />} />
         <Route path="/category/:categoryId/datasets" element={<Main child={<CategoryDatasets />} />} />
-        <Route path="/dataset/details/:id" element={<DatasetDetails />} />
+        {/* <Route path="/dataset/details/:id" element={<DatasetDetails />} /> */}
+        <Route path="/dataset/details/:id" element={<Main child={<DatasetDetails />} />}/>
         </Route>
 
         {/* Other user routes */}
