@@ -110,7 +110,7 @@ router.get("/:id", verifyToken, async (req, res) => {
 //  Add project
 router.post("/add", verifyToken, isAdmin, multipleUpload, async (req, res) => {
   try {
-    const { dataset, title, description, link, category } = req.body;
+    const { dataset, title, description, link, category, docxUrl } = req.body;
 
     const newProject = new AlumniProject({
       dataset,
@@ -137,7 +137,7 @@ router.post("/add", verifyToken, isAdmin, multipleUpload, async (req, res) => {
 //  Update project
 router.put("/:id", verifyToken, isAdmin, multipleUpload, async (req, res) => {
   try {
-    const { title, description, link, category, dataset } = req.body;
+    const { title, description, link, category, dataset,docxUrl } = req.body;
     const updateData = { title, description, link, category, dataset };
       if (docxUrl) updateData.docxUrl = docxUrl; 
 

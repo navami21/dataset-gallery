@@ -1,3 +1,5 @@
+
+
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 import { motion } from "framer-motion";
@@ -29,11 +31,14 @@ const DatasetDetails = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [projects, setProjects] = useState([]);
+  const [showProjects, setShowProjects] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
   const token = localStorage.getItem("logintoken");
   const userId = localStorage.getItem("userId");
   const userName = localStorage.getItem("name") || localStorage.getItem("email");
 
-  // Fetch dataset, likes, comments
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -43,18 +48,15 @@ const DatasetDetails = () => {
         const role = localStorage.getItem("role");
         setUserRole(role);
 
-        // Get like status + total likes
         const likeStatusRes = await axiosInstance.get(`/likes/dataset/${id}/status`, {
           headers: { token },
         });
         setIsLiked(likeStatusRes.data.liked);
         setLikes(Array(likeStatusRes.data.totalLikes).fill({}));
 
-        // Get comments
         const commentRes = await axiosInstance.get(`/comments/${id}`, { headers: { token } });
         setComments(commentRes.data);
 
-        // Track activity
         await axiosInstance.post("/activity/addAccessedContent", {
           action: "viewed",
           datasetId: id,
@@ -143,21 +145,42 @@ const DatasetDetails = () => {
     }
   };
 
+  const handleShowProjects = async () => {
+    if (showProjects) {
+      setShowProjects(false);
+      return;
+    }
+
+    setLoadingProjects(true);
+    setShowProjects(true);
+    try {
+      const res = await axiosInstance.get(`/projects/dataset/${id}`, {
+        headers: { token }
+      });
+      setProjects(res.data.projects);
+    } catch (err) {
+      console.error("Error fetching projects by dataset:", err);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (!dataset) return <div className="text-center mt-10 text-red-500">Dataset not found</div>;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Back Button */}
       <div className="mb-4">
-      <button
-        onClick={() => navigate(-1)}
-        className="p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
-      >
-        <ArrowLeft size={24} />
-      </button>
-   
-  <h1 className="text-3xl font-bold text-center text-gray-800">Dataset Details</h1>
-    </div>
+        <button
+  onClick={() => navigate(-1)}
+  className="fixed top-16 sm:top-4 left-4 z-50 p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
+>
+  <ArrowLeft size={24} />
+</button>
+
+        <h1 className="text-3xl font-bold text-center text-gray-800">Dataset Details</h1>
+      </div>
 
       {showPopup && (
         <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
@@ -165,8 +188,9 @@ const DatasetDetails = () => {
         </div>
       )}
 
+      {/* Dataset and Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Section */}
+        {/* Left Content */}
         <div className="md:col-span-2 bg-white p-6 rounded-lg shadow">
           <h1 className="text-3xl font-semibold mb-4">{dataset.title}</h1>
 
@@ -181,13 +205,14 @@ const DatasetDetails = () => {
           <h2 className="text-xl font-semibold mb-2">Dataset Overview</h2>
           <p className="text-gray-700 whitespace-pre-line">{dataset.description}</p>
 
+          {/* Project and Engagement Buttons */}
           <div className="flex flex-wrap gap-4 mt-6">
-            <Link
-              to={`/datasets/${dataset._id}/projects`}
+            <button
+              onClick={handleShowProjects}
               className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition"
             >
-              View Projects
-            </Link>
+              {showProjects ? "Hide Projects" : "View Projects"}
+            </button>
 
             {userRole === "admin" && (
               <button
@@ -199,10 +224,9 @@ const DatasetDetails = () => {
             )}
           </div>
 
-          {/* Engagement Section */}
+          {/* Likes & Comments */}
           <div className="mt-8">
             <div className="flex items-center gap-6 mb-4">
-              {/* Likes */}
               {userRole === "user" ? (
                 <motion.button
                   onClick={handleLike}
@@ -216,11 +240,7 @@ const DatasetDetails = () => {
                   ) : (
                     <FaHeart
                       className="text-xl"
-                      style={{
-                        fill: "none",
-                        stroke: "currentColor",
-                        strokeWidth: 9,
-                      }}
+                      style={{ fill: "none", stroke: "currentColor", strokeWidth: 9 }}
                     />
                   )}
                   <span className="font-semibold">{likes.length}</span>
@@ -232,7 +252,6 @@ const DatasetDetails = () => {
                 </div>
               )}
 
-              {/* Comments */}
               <button
                 onClick={() => setShowCommentList(prev => !prev)}
                 className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
@@ -244,45 +263,43 @@ const DatasetDetails = () => {
             </div>
 
             {showCommentList && (
-  <>
-    {userRole === "user" && (
-      <div className="mt-4">
-        <textarea
-          className="w-full p-3 border border-gray-300 rounded"
-          placeholder="Write a comment..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-        />
-        <button
-          onClick={handleAddComment}
-          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Post Comment
-        </button>
-      </div>
-    )}
+              <>
+                {userRole === "user" && (
+                  <div className="mt-4">
+                    <textarea
+                      className="w-full p-3 border border-gray-300 rounded"
+                      placeholder="Write a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                    />
+                    <button
+                      onClick={handleAddComment}
+                      className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    >
+                      Post Comment
+                    </button>
+                  </div>
+                )}
 
-    <div className="mt-6">
-      <h3 className="font-semibold text-lg mb-2">Comments</h3>
-
-      <div className="max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        {comments.map((comment) => (
-          <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
-            <p>{comment.comment}</p>
-            <p className="text-sm text-gray-600 mt-1">
-              — {comment.user?.name || comment.user?.email}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </>
-)}
-
+                <div className="mt-6">
+                  <h3 className="font-semibold text-lg mb-2">Comments</h3>
+                  <div className="max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                    {comments.map((comment) => (
+                      <div key={comment._id} className="bg-gray-100 p-3 mb-2 rounded">
+                        <p>{comment.comment}</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          — {comment.user?.name || comment.user?.email}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* Right Side Summary Card */}
         <div className="bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm self-start">
           <h3 className="text-lg font-semibold mb-4 border-b pb-2">Summary</h3>
 
@@ -335,6 +352,43 @@ const DatasetDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Projects Section - OUTSIDE the card */}
+      {showProjects && (
+        <div className="mt-16">
+          <h2 className="text-black text-center font-semibold text-2xl mb-6">
+            Available Projects
+          </h2>
+
+          {loadingProjects ? (
+            <div className="text-center">Loading Projects...</div>
+          ) : projects.length === 0 ? (
+            <div className="text-center text-gray-600">No projects found for this dataset.</div>
+          ) : (
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project) => (
+                <div
+                  key={project._id}
+                  className="bg-white shadow-md rounded-xl p-4 hover:shadow-lg transition"
+                >
+                  <img
+                    src={`http://localhost:3000${project.image}`}
+                    alt={project.title}
+                    className="w-full h-40 object-cover rounded-lg mb-3"
+                  />
+                  <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
+                  <Link
+                    to={`/projects/${project._id}`}
+                    className="bg-[#0099cc] font-semibold text-white px-4 py-2 rounded hover:bg-[#00809D] transition inline-block mt-2"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

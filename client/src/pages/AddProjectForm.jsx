@@ -49,6 +49,7 @@ const AddProjectForm = () => {
 
         if (projectId) {
           setLoading(true);
+          setIsEditMode(true);
           const res = await axiosInstance.get(`/projects/${projectId}`);
           const project = res.data.project;
 

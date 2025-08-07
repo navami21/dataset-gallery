@@ -70,11 +70,12 @@ const CategoryDatasets = () => {
       </div> */}
       <div className="mb-6">
    <button
-    onClick={() => navigate(-1)}
-    className="p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
-  >
-    <ArrowLeft size={24} />
-  </button>
+  onClick={() => navigate(-1)}
+  className="fixed top-16 sm:top-4 left-4 z-50 p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
+>
+  <ArrowLeft size={24} />
+</button>
+
   </div>
 
       {/* Title */}

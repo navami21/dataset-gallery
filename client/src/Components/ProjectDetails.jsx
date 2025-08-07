@@ -113,12 +113,13 @@ const ProjectDetails = () => {
 
       {/* Back Button */}
       <div className="self-start mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
-        >
-          <ArrowLeft size={24} />
-        </button>
+       <button
+  onClick={() => navigate(-1)}
+  className="fixed top-16 sm:top-4 left-4 z-50 p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
+>
+  <ArrowLeft size={24} />
+</button>
+
       </div>
 
       {/* Card */}
@@ -131,7 +132,7 @@ const ProjectDetails = () => {
                 <img
                   src={displayedImage}
                   alt="Project Visual"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain transition-transform duration-500"
                 />
                 {imageArray.length > 1 && (
                   <>

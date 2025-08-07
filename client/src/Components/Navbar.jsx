@@ -151,10 +151,8 @@ const Navbar = () => {
       <div className="px-4 md:px-6 max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <img src="/assets/LOGO.png" alt="logo" className="h-10" />
-          <h1 className="text-sm font-semibold text-gray-800">
-            ICTAK LearnSphere
-          </h1>
+          <img src="/assets/LOGO_ICTAK-ENG-Black-Text.png" alt="logo" className="h-10" />
+          
         </div>
 
         {/* Desktop Menu */}
