@@ -46,14 +46,15 @@ const AlumniProjectsList = () => {
           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00b4d8]"
         />
       </div>
+<div className="flex flex-wrap justify-center gap-8">
 
-      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {filteredProjects.length > 0 ? (
           filteredProjects.map((project) => (
-            <div
-              key={project._id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
-            >
+           <div
+  key={project._id}
+  className="w-full max-w-xs bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
+>
+
               {/* Project Image */}
               <div className="relative h-48 overflow-hidden">
                 {project.image && project.image.length > 0 ? (
