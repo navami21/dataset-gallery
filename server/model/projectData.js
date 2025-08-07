@@ -7,10 +7,11 @@ const alumniProjectSchema = new mongoose.Schema({
   description: String,
   link: String, // repo link
   image: {
-    type: [String], // change from String to array of Strings
-    default: [],    // optional: default to empty array if no images uploaded
+    type: [String],
+    default: [],   
   },
   report: { type: String },
+   docxUrl: { type: String },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   createdAt: { type: Date, default: Date.now }
 });

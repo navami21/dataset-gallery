@@ -1,19 +1,18 @@
-
 import { useEffect, useState } from "react";
 import axiosInstance from "../axiosinterceptor";
-import { FaReply, FaEnvelopeOpenText } from "react-icons/fa"; // Icon for heading
+import { FaReply, FaEnvelopeOpenText, FaSearch } from "react-icons/fa"; 
 
 const AdminMessages = () => {
   const [messages, setMessages] = useState([]);
   const [replyText, setReplyText] = useState("");
   const [activeReplyId, setActiveReplyId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     axiosInstance.get("/contact").then(res => setMessages(res.data));
   }, []);
 
   const sendReply = async (id, hasUserId) => {
-    // Prevent sending reply to guest users
     if (!hasUserId) {
       alert("Cannot reply to guest users.");
       return;
@@ -32,17 +31,34 @@ const AdminMessages = () => {
     }
   };
 
+  // 🔍 Filter messages by email
+  const filteredMessages = messages.filter(msg =>
+    msg.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 text-[#0099cc] flex items-center gap-2">
-        <FaEnvelopeOpenText className="text-[#0099cc]" size={26} />
+      <h2 className="text-2xl font-bold mb-6 text-black flex items-center gap-2">
+        <FaEnvelopeOpenText className="text-black" size={26} />
         Contact Messages
       </h2>
 
-      {messages.length === 0 ? (
+      {/* 🔍 Search Bar */}
+      <div className="mb-6 relative max-w-md">
+        <FaSearch className="absolute left-3 top-3.5 text-gray-500" />
+        <input
+          type="text"
+          placeholder="Search by email..."
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0099cc]"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {filteredMessages.length === 0 ? (
         <p className="text-gray-500 text-center">No messages found.</p>
       ) : (
-        messages.map(msg => (
+        filteredMessages.map(msg => (
           <div
             key={msg._id}
             className="bg-white rounded-xl shadow-md p-5 mb-5 border-l-4 border-[#0099cc] hover:shadow-lg transition-shadow duration-300"
@@ -74,7 +90,10 @@ const AdminMessages = () => {
                       <FaReply /> Send Reply
                     </button>
                     <button
-                      onClick={() => { setActiveReplyId(null); setReplyText(""); }}
+                      onClick={() => {
+                        setActiveReplyId(null);
+                        setReplyText("");
+                      }}
                       className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
                     >
                       Cancel

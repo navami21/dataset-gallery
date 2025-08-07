@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import axiosInstance from "../axiosinterceptor";
-import { UploadCloud } from "lucide-react"; // Make sure to install lucide-react if not
+import { UploadCloud } from "lucide-react"; 
 
 const UserUploadPreview = () => {
   const [previewUsers, setPreviewUsers] = useState([]);
@@ -11,27 +11,51 @@ const UserUploadPreview = () => {
   const [showModal, setShowModal] = useState(false);
   const [dragging, setDragging] = useState(false);
 
-  const handleFileChange = (e) => {
-    const uploadedFile = e.target.files[0];
-    if (uploadedFile) {
-      setFile(uploadedFile);
-      setPreviewUsers([]);
-      setCheckedEmails([]);
-      setMessage("");
+  
+  const isValidExcelFile = (file) => {
+  const allowedTypes = [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  const allowedExtensions = ["xlsx", "xls"];
+  const fileExtension = file.name.split(".").pop().toLowerCase();
+
+  return allowedTypes.includes(file.type) && allowedExtensions.includes(fileExtension);
+};
+
+const handleFileChange = (e) => {
+  const uploadedFile = e.target.files[0];
+  if (uploadedFile) {
+    if (!isValidExcelFile(uploadedFile)) {
+      alert("Only Excel files (.xlsx or .xls) are allowed.");
+      return;
     }
-  };
+
+    setFile(uploadedFile);
+    setPreviewUsers([]);
+    setCheckedEmails([]);
+    setMessage("");
+  }
+};
+
 
   const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      setFile(droppedFile);
-      setPreviewUsers([]);
-      setCheckedEmails([]);
-      setMessage("");
+  e.preventDefault();
+  setDragging(false);
+  const droppedFile = e.dataTransfer.files[0];
+  if (droppedFile) {
+    if (!isValidExcelFile(droppedFile)) {
+      alert("Only Excel files (.xlsx or .xls) are allowed.");
+      return;
     }
-  };
+
+    setFile(droppedFile);
+    setPreviewUsers([]);
+    setCheckedEmails([]);
+    setMessage("");
+  }
+};
+
 
   const handlePreview = async () => {
     if (!file) return alert("Please upload an Excel file");
@@ -67,11 +91,11 @@ const UserUploadPreview = () => {
       const messageLines = [];
 
       if (success.length > 0)
-        messageLines.push(`✅ Emails sent to: ${success.join(", ")}`);
+        messageLines.push(`Emails sent to: ${success.join(", ")}`);
       if (exists.length > 0)
         messageLines.push(`⚠ Already in database: ${exists.join(", ")}`);
       if (failed.length > 0)
-        messageLines.push(`❌ Failed to send: ${failed.join(", ")}`);
+        messageLines.push(` Failed to send: ${failed.join(", ")}`);
 
       setMessage(messageLines.join("\n"));
       setShowModal(true);
@@ -81,7 +105,7 @@ const UserUploadPreview = () => {
       }, 2000);
     } catch (err) {
       console.error("Failed to send emails:", err);
-      setMessage("❌ An unexpected error occurred.");
+      setMessage("An unexpected error occurred.");
       setShowModal(true);
     }
   };
@@ -108,13 +132,14 @@ const UserUploadPreview = () => {
           Drag and drop your Excel file here, or click to select
         </p>
         <p className="text-sm text-gray-400 mt-1">Accepted: .xlsx, .xls</p>
-        <input
-          id="fileInput"
-          type="file"
-          accept=".xlsx, .xls"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+       <input
+  id="fileInput"
+  type="file"
+  accept=".xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+  onChange={handleFileChange}
+  className="hidden"
+/>
+
         {file && (
           <p className="mt-2 text-sm text-green-600 font-semibold">
             Selected file: {file.name}

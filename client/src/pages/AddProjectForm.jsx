@@ -22,6 +22,7 @@ const AddProjectForm = () => {
     dataset: "",
     image: null,
     report: null,
+     docxUrl: "",
   });
 
   const filterDatasetsByCategory = (categoryId) => {
@@ -59,6 +60,8 @@ const AddProjectForm = () => {
             dataset: project.dataset?._id || "",
             image: null,
             report: null,
+             docxUrl: project.docxUrl || "", 
+           
           });
 
           setExistingImages(project.image || []); 
@@ -277,6 +280,17 @@ const AddProjectForm = () => {
             isEditMode && <p className="text-sm text-gray-500 mt-2">Report already uploaded</p>
           )}
         </div>
+        <div className="md:col-span-2">
+  <label className="block font-medium mb-1">DOCX File URL (optional)</label>
+  <input
+    type="url"
+    name="docxUrl"
+    value={formData.docxUrl || ""}
+    onChange={handleChange}
+    placeholder="https://example.com/document.docx"
+    className="w-full border px-3 py-2 rounded"
+  />
+</div>
 
        <div className="md:col-span-2 flex flex-col md:flex-row gap-3 justify-end">
   <button

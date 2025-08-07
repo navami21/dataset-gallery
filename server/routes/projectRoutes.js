@@ -118,6 +118,7 @@ router.post("/add", verifyToken, isAdmin, multipleUpload, async (req, res) => {
       description,
       link,
       category,
+      docxUrl: docxUrl || null,
       image: req.files?.image
         ? req.files.image.map((file) => `/uploads/alumni/${file.filename}`)
         : [],
@@ -133,11 +134,12 @@ router.post("/add", verifyToken, isAdmin, multipleUpload, async (req, res) => {
   }
 });
 
-// ✅ Update project
+//  Update project
 router.put("/:id", verifyToken, isAdmin, multipleUpload, async (req, res) => {
   try {
     const { title, description, link, category, dataset } = req.body;
     const updateData = { title, description, link, category, dataset };
+      if (docxUrl) updateData.docxUrl = docxUrl; 
 
     if (req.files?.image) {
       updateData.image = req.files.image.map((file) => `/uploads/alumni/${file.filename}`);
