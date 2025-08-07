@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
-import { FaEdit, FaTrash, FaSearch } from "react-icons/fa";
+import { FaEdit, FaTrash, FaSearch, FaPlusCircle } from "react-icons/fa";
 
 const DatasetView = () => {
   const [datasets, setDatasets] = useState([]);
@@ -12,7 +12,7 @@ const DatasetView = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const categoryId = params.get("category");
-
+  const navigate = useNavigate(); 
   const userRole = localStorage.getItem("role");
 
   const fetchDatasets = async () => {
@@ -64,8 +64,23 @@ const DatasetView = () => {
 
   return (
     <div className="p-4 md:p-8">
-      <h2 className="text-2xl font-bold text-center mb-6">Available Datasets</h2>
+      {/* <h2 className="text-2xl font-bold text-center mb-6">Available Datasets</h2> */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+    <h2 className="text-2xl font-bold text-gray-800 text-center sm:text-left">
+      Available Datasets
+    </h2>
 
+    {userRole === "admin" && (
+      <button
+        onClick={() => navigate("/admin/datasets/add")}
+        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0099cc] hover:bg-[#007aab] rounded-lg shadow-md transition w-full sm:w-auto"
+      >
+        <FaPlusCircle className="text-white" />
+        Add Dataset
+      </button>
+    )}
+  </div>
+  
       {/* Search Bar */}
       <div className="relative max-w-md mx-auto mb-8">
         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2,PlusCircle  } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 import { toast } from "react-toastify";
@@ -36,7 +36,35 @@ const ViewCategories = () => {
 
   return (
     <div className="p-6 bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">All Categories</h1>
+      {/* <h1 className="text-3xl font-bold mb-6 text-gray-800">All Categories</h1> */}
+       {/* Heading and Add Button */}
+    {/* <div className="flex items-center justify-between mb-6">
+      <h1 className="text-3xl font-bold text-gray-800">All Categories</h1>
+
+      {userRole === "admin" && (
+        <button
+          onClick={() => navigate("/admin/category/add")}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0099cc] hover:bg-[#007aab] rounded-lg shadow-md transition"
+        >
+          <PlusCircle size={18} />
+          Add Category
+        </button>
+      )}
+    </div> */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <h1 className="text-3xl font-bold text-gray-800">All Categories</h1>
+
+  {userRole === "admin" && (
+    <button
+      onClick={() => navigate("/admin/category/add")}
+      className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0099cc] hover:bg-[#007aab] rounded-lg shadow-md transition w-full sm:w-auto"
+    >
+      <PlusCircle size={18} />
+      Add Category
+    </button>
+  )}
+</div>
+
 
       {/* Responsive Grid */}
       <div className="grid gap-8 justify-center sm:grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]">
