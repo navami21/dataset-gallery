@@ -3,6 +3,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
 import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 
 const EngagementPage = () => {
   const { type, id } = useParams();
@@ -40,12 +41,15 @@ const EngagementPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-      >
-        ← Back
-      </button>
+     
+       <div className="self-start mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
+        >
+          <ArrowLeft size={24} />
+        </button>
+      </div>
 
       <h1 className="text-3xl font-semibold mb-6 capitalize">
         {type} Engagement Details

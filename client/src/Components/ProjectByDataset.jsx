@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
+import { ArrowLeft } from "lucide-react";
 
 const ProjectsByDataset = () => {
   const { datasetId } = useParams();
@@ -36,12 +37,13 @@ const ProjectsByDataset = () => {
   return (
     <div className="p-6">
       {/* Back Button */}
-      <div className="mb-4">
+      
+       <div className="self-start mb-4">
         <button
           onClick={() => navigate(-1)}
-          className="bg-gray-600 text-white px-4 py-2 rounded font-semibold hover:bg-gray-400 hover:text-black  transition"
+          className="p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
         >
-          ← Back
+          <ArrowLeft size={24} />
         </button>
       </div>
 
