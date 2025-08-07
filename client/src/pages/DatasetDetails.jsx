@@ -12,6 +12,7 @@ import {
 } from "react-icons/fa";
 import { MdGridView } from "react-icons/md";
 import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 
 const DatasetDetails = () => {
   const { id } = useParams();
@@ -147,6 +148,17 @@ const DatasetDetails = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-4">
+      <button
+        onClick={() => navigate(-1)}
+        className="p-2 rounded-full bg-[#0099cc] hover:bg-[#5EABD6] text-white shadow-lg transition duration-300"
+      >
+        <ArrowLeft size={24} />
+      </button>
+   
+  <h1 className="text-3xl font-bold text-center text-gray-800">Dataset Details</h1>
+    </div>
+
       {showPopup && (
         <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
           {popupMessage}
