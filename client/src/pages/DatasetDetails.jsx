@@ -158,6 +158,7 @@ const DatasetDetails = () => {
         headers: { token }
       });
       setProjects(res.data.projects);
+      
     } catch (err) {
       console.error("Error fetching projects by dataset:", err);
     } finally {
@@ -372,10 +373,10 @@ const DatasetDetails = () => {
                   className="bg-white shadow-md rounded-xl p-4 hover:shadow-lg transition"
                 >
                   <img
-                    src={`http://localhost:3000${project.image}`}
-                    alt={project.title}
-                    className="w-full h-40 object-cover rounded-lg mb-3"
-                  />
+  src={`http://localhost:3000${project.image?.[0]}`}
+  alt={project.title}
+  className="w-full h-40 object-cover rounded-lg mb-3"
+/>
                   <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
                   <Link
                     to={`/projects/${project._id}`}
