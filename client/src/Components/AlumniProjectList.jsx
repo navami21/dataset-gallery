@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosinterceptor";
-import { FaArrowRight, FaSearch } from "react-icons/fa";
+import { FaArrowRight, FaSearch,FaPlusCircle } from "react-icons/fa";
 
 const AlumniProjectsList = () => {
   const [alumniProjects, setAlumniProjects] = useState([]);
@@ -31,9 +31,22 @@ const AlumniProjectsList = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+      {/* <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
         Alumni Projects
-      </h1>
+      </h1> */}
+       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+    <h1 className="text-3xl font-bold text-gray-800 text-center sm:text-left">
+      Alumni Projects
+    </h1>
+
+    <button
+      onClick={() => navigate("/admin/projects/add")}
+      className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0099cc] hover:bg-[#007aab] rounded-lg shadow-md transition w-full sm:w-auto"
+    >
+      <FaPlusCircle className="text-white" />
+      Add Project
+    </button>
+  </div>
 
       {/* Search Bar */}
       <div className="relative max-w-md mx-auto mb-8">
