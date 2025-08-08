@@ -40,27 +40,37 @@ router.get("/all",verifyToken, async (req, res) => {
   }
 });
 // Edit Category
-router.put("/edit/:id", upload.single("image"),isAdmin,verifyToken, async (req, res) => {
+router.put("/edit/:id", verifyToken, isAdmin, upload.single("image"), async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, description } = req.body;
     const id = req.params.id;
 
     const category = await Category.findById(id);
-    if (!category) return res.status(404).json({ message: "Category not found" });
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
 
-    category.name = name || category.name;
+    // Update name & description if provided
+    if (name) category.name = name;
+    if (description) category.description = description;
 
+    // Update image if a new file is uploaded
     if (req.file) {
-      category.imageUrl = "/uploads/categories/" + req.file.filename;
+      category.imageUrl = `/uploads/categories/${req.file.filename}`;
     }
 
     await category.save();
-    res.status(200).json({ message: "Category updated successfully", category });
+
+    res.status(200).json({
+      message: "Category updated successfully",
+      category
+    });
   } catch (err) {
     console.error("Edit error:", err);
     res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
 });
+
 
 
   // DELETE category
