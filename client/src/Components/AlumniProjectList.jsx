@@ -34,8 +34,8 @@ const AlumniProjectsList = () => {
       {/* <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
         Alumni Projects
       </h1> */}
-       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-    <h1 className="text-3xl font-bold text-gray-800 text-center sm:text-left">
+       <div className="flex flex-col items-center sm:flex-row justify-between  mb-6 gap-4">
+    <h1 className="text-3xl font-bold text-gray-800 text-center">
       Alumni Projects
     </h1>
 
@@ -94,7 +94,7 @@ const AlumniProjectsList = () => {
 
                 <button
                   onClick={() => handleViewDetails(project._id)}
-                  className="mt-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#00b4d8] to-[#0096c7] text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] transition-all"
+                  className="mt-auto flex items-center justify-center gap-2 bg-gradient-to-r from-[#00b4d8] to-[#0096c7] text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] transition-all w-full sm:w-auto text-sm"
                 >
                   View Details
                   <FaArrowRight size={14} />

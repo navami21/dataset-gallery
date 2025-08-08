@@ -82,19 +82,21 @@ const Navbar = () => {
 
   const sharedLinks = (
     <>
-      <Link to="/contact" className="hover:text-blue-500 transition">Contact</Link>
     </>
   );
 
   const roleBasedLink = () => {
     if (role === "admin") {
-      return <Link to="/admin/dashboard" className="hover:text-blue-500 transition">Dashboard</Link>;
+      return<> <Link to="/admin/dashboard" className="hover:text-blue-500 transition">Dashboard</Link>
+              <Link to="/admin/user-activity" className="hover:text-blue-500 transition">Activity Logs</Link>
+      </> 
     }
     if (role === "user") {
       return (
         <>
           <Link to="/userdashboard" className="hover:text-blue-500 transition">Dashboard</Link>
           <Link to="/category/all" className="hover:text-blue-500 transition">Category</Link>
+          <Link to="/contact" className="hover:text-blue-500 transition">Contact</Link>
           <Link to="/notifications" className="relative hover:text-blue-500 transition">
             Notifications
             {notificationCount > 0 && (
